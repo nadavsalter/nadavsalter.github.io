@@ -307,6 +307,7 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); 
 .c-stat { display: flex; align-items: baseline; gap: 10px; }
 .c-stat b { font-family: var(--display); font-stretch: 125%; font-weight: 900; font-size: clamp(36px, 5vw, 48px); line-height: 1; color: var(--blush); font-variant-numeric: tabular-nums; }
 .c-stat span { color: var(--mist); font-size: 14px; }
+.c-split { font-family: var(--mono); font-size: 12px; color: var(--mist); margin-top: -10px; }
 .c-about { margin: 0; color: rgba(255,248,243,.8); font-size: 15px; }
 .socials { display: flex; flex-wrap: wrap; gap: 8px; }
 .socials a {
@@ -822,12 +823,14 @@ document.querySelectorAll("button.copy").forEach(b => b.addEventListener("click"
 /* ===== Clients ===== 
    To add a creator, copy one block below and change the details. */
 const CLIENTS = [
-  { name: "K. Shami", initials: "KS", handle: "@syrianpsych0", subs: 312000,
+  { name: "K. Shami", initials: "KS", handle: "@syrianpsych0", subs: 312000 + 1900000 + 645300 + 559985,
+    split: "YouTube 312K · TikTok 2.5M · Instagram 560K",
     about: "Self-improvement and looksmaxxing creator known for his reaction videos and tier lists. I edit short-form clips for his channel.",
     links: [["YouTube", "https://www.youtube.com/@syrianpsych0"], ["TikTok", "https://www.tiktok.com/@syrianpsycho"], ["Instagram", "https://www.instagram.com/syrianpsycho/"]] },
-  { name: "Dillon Latham", initials: "DL", handle: "@dillonlatham", subs: 1060000,
+  { name: "Dillon Latham", initials: "DL", handle: "@dillonlatham", subs: 1060000 + 2000000 + 507000 + 5618,
+    split: "TikTok 2M · YouTube 1.06M · Instagram 507K · X 5.6K",
     about: "Hair, style and glow-up creator, and founder of the hair care brand Simpletics. I edit short-form clips for his channel.",
-    links: [["YouTube", "https://www.youtube.com/@dillonlatham"], ["X", "https://x.com/Dillonxlatham"]] }
+    links: [["TikTok", "https://www.tiktok.com/@dillon.latham"], ["YouTube", "https://www.youtube.com/@dillonlatham"], ["Instagram", "https://www.instagram.com/dillonxlatham/"], ["X", "https://x.com/Dillonxlatham"]] }
 ];
 const ICONS = {
   YouTube: '<path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15.1V8.9l5.8 3.1-5.8 3.1z"/>',
@@ -837,17 +840,18 @@ const ICONS = {
 };
 (function () {
   const list = document.getElementById("clist");
-  const fmt = n => n >= 1e6 ? (Math.floor(n / 1e4) / 100).toFixed(2).replace(/\.?0+$/, "") + "M" : Math.round(n / 1e3) + "K";
+  const fmt = n => n >= 1e6 ? (Math.floor(n / 1e5) / 10).toFixed(1).replace(/\.0$/, "") + "M" : Math.round(n / 1e3) + "K";
   const total = CLIENTS.reduce((s, c) => s + c.subs, 0);
-  document.getElementById("clientsNote").innerHTML = "Short-form clips for YouTube creators with <b>" + fmt(total) + "+</b> subscribers between them.";
+  document.getElementById("clientsNote").innerHTML = "Short-form clips for creators with <b>" + fmt(total) + "+</b> followers between them across YouTube, TikTok, Instagram and X.";
   CLIENTS.forEach(c => {
     const el = document.createElement("article"); el.className = "client";
     el.innerHTML = '<div class="c-top"><span class="avatar"></span><div><h3 class="c-name"></h3><div class="c-handle"></div></div></div>' +
-      '<div class="c-stat"><b data-to="' + c.subs + '">0</b><span>YouTube subscribers</span></div><p class="c-about"></p><div class="socials"></div>';
+      '<div class="c-stat"><b data-to="' + c.subs + '">0</b><span>total followers</span></div><div class="c-split"></div><p class="c-about"></p><div class="socials"></div>';
     el.querySelector(".avatar").textContent = c.initials;
     el.querySelector(".c-name").textContent = c.name;
     el.querySelector(".c-handle").textContent = c.handle;
     el.querySelector(".c-about").textContent = c.about;
+    el.querySelector(".c-split").textContent = c.split;
     const s = el.querySelector(".socials");
     c.links.forEach(([label, url]) => {
       const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener";
