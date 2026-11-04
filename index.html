@@ -284,70 +284,110 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); 
 }
 .tip.on { opacity: 1; }
 
-/* Build-a-clip playground */
-.lab { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: clamp(24px, 5vw, 64px); align-items: center; }
-.screen {
-  position: relative; aspect-ratio: 4 / 5; max-width: 100%; border-radius: 22px; overflow: hidden; background: #1a2229;
-  border: 1px solid var(--line); box-shadow: 0 40px 90px -40px rgba(95,132,160,.6);
+/* Clients */
+.clients-note { color: var(--mist); max-width: 60ch; margin: -12px 0 32px; }
+.clients-note b { color: var(--blush); font-weight: 600; }
+.clist { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.client {
+  --mx: 50%; --my: 50%;
+  position: relative; overflow: hidden; display: grid; gap: 18px; align-content: start; min-width: 0;
+  padding: 26px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line);
+  transition: transform .5s var(--ease), border-color .4s;
 }
-.footage { position: absolute; inset: -10%; background:
-  radial-gradient(60% 50% at 30% 30%, #5f84a0 0%, transparent 70%),
-  radial-gradient(50% 40% at 75% 70%, #8a6f66 0%, transparent 70%),
-  linear-gradient(160deg, #2b3a46, #12181d);
-  animation: pan 9s ease-in-out infinite alternate; transition: filter .6s var(--ease); }
-@keyframes pan { to { transform: scale(1.12) translate(3%, -2%); } }
-.subject { position: absolute; left: 50%; bottom: 0; width: 62%; transform: translateX(-50%); transition: transform .5s var(--ease); }
-.subject svg { width: 100%; display: block; }
-.screen .grain-raw { position: absolute; inset: 0; background: rgba(140,140,130,.18); mix-blend-mode: overlay; transition: opacity .6s; }
-.screen:not(.fx-color) .footage { filter: grayscale(.75) contrast(.75) brightness(1.15); }
-.screen.fx-color .grain-raw { opacity: 0; }
-.screen.fx-color .footage { filter: saturate(1.25) contrast(1.1); }
-.screen .rawtag { position: absolute; top: 14px; left: 14px; font: 600 11px var(--mono); letter-spacing: .1em; color: var(--cream); background: rgba(8,9,11,.5); padding: 5px 9px; border-radius: 6px; transition: opacity .4s; }
-.screen .cap {
-  position: absolute; left: 8%; right: 8%; top: 58%; text-align: center; font-family: var(--display); font-weight: 900; font-stretch: 112%;
-  font-size: clamp(22px, 3.4vw, 32px); line-height: 1.05; color: var(--cream); text-transform: uppercase;
-  text-shadow: 0 3px 0 #08090b, 0 0 24px rgba(0,0,0,.5); opacity: 0; transition: opacity .3s;
+.client::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s;
+  background: radial-gradient(320px circle at var(--mx) var(--my), rgba(95,132,160,.28), transparent 65%); }
+.client:hover { transform: translateY(-4px); border-color: rgba(247,231,220,.2); }
+.client:hover::before { opacity: 1; }
+.client > * { position: relative; }
+.c-top { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.avatar { width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+  font: 800 19px var(--display); font-stretch: 112%; color: var(--black); background: linear-gradient(135deg, var(--blush), var(--slate-hi)); }
+.c-name { font-family: var(--display); font-weight: 800; font-stretch: 112%; font-size: 24px; line-height: 1.1; margin: 0; }
+.c-handle { font-family: var(--mono); font-size: 13px; color: var(--mist); overflow-wrap: anywhere; }
+.c-stat { display: flex; align-items: baseline; gap: 10px; }
+.c-stat b { font-family: var(--display); font-stretch: 125%; font-weight: 900; font-size: clamp(36px, 5vw, 48px); line-height: 1; color: var(--blush); font-variant-numeric: tabular-nums; }
+.c-stat span { color: var(--mist); font-size: 14px; }
+.c-about { margin: 0; color: rgba(255,248,243,.8); font-size: 15px; }
+.socials { display: flex; flex-wrap: wrap; gap: 8px; }
+.socials a {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 13px; font-weight: 500;
+  padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); color: var(--cream);
+  transition: background .25s, border-color .25s, transform .3s var(--ease);
 }
-.screen .cap b { color: var(--blush); display: inline-block; animation: popw .35s var(--ease); }
-@keyframes popw { from { transform: scale(.4) rotate(-6deg); opacity: 0; } }
-.screen.fx-text .cap { opacity: 1; }
-.screen .eq { position: absolute; right: 14px; bottom: 14px; display: flex; gap: 3px; align-items: end; height: 26px; opacity: 0; transition: opacity .3s; }
-.screen .eq i { width: 4px; background: var(--blush); border-radius: 2px; animation: eq .5s ease-in-out infinite alternate; }
-.screen .eq i:nth-child(2) { animation-delay: .15s; } .screen .eq i:nth-child(3) { animation-delay: .3s; } .screen .eq i:nth-child(4) { animation-delay: .05s; }
-@keyframes eq { from { height: 4px; } to { height: 26px; } }
-.screen.fx-music .eq { opacity: 1; }
-.screen.fx-music .subject { animation: bob .5s ease-in-out infinite alternate; }
-@keyframes bob { to { transform: translateX(-50%) scale(1.025); } }
-.screen .flash { position: absolute; inset: 0; background: var(--cream); opacity: 0; pointer-events: none; }
-.screen.fx-trans .flash.go { animation: flash .45s var(--ease); }
-@keyframes flash { 0% { opacity: .85; } 100% { opacity: 0; } }
-.screen.fx-trans.punch .footage, .screen.fx-trans.punch .subject { transform: translateX(-50%) scale(1.12); }
-.screen.fx-trans.punch .footage { transform: scale(1.2); }
-.screen .sfx { position: absolute; top: 18%; right: 10%; font: 900 18px var(--display); color: var(--black); background: var(--blush); padding: 4px 10px; border-radius: 8px; transform: rotate(8deg) scale(0); transition: transform .3s var(--ease); }
-.screen.fx-sfx .sfx.go { transform: rotate(8deg) scale(1); }
-.toggles { display: grid; gap: 10px; }
-.toggle {
-  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; text-align: left; width: 100%;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; color: var(--cream); cursor: pointer;
-  font: 500 16px var(--body); transition: border-color .3s, background .3s, transform .3s var(--ease);
+.socials a:hover { background: var(--cream); color: var(--black); transform: translateY(-2px); }
+.socials svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
+.client.next { border-style: dashed; background: transparent; place-content: center; text-align: center; min-height: 260px; text-decoration: none; }
+.client.next .plus { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto; display: grid; place-items: center; border: 1px dashed var(--mist); font-size: 26px; color: var(--blush); transition: transform .5s var(--ease); }
+.client.next:hover .plus { transform: rotate(90deg); }
+.client.next p { margin: 0; color: var(--mist); }
+
+/* Demo: a phone playing a reel */
+.lab { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); gap: clamp(28px, 6vw, 80px); align-items: center; }
+.phone {
+  position: relative; width: 100%; max-width: 330px; aspect-ratio: 9 / 19; border-radius: 46px; padding: 11px;
+  background: linear-gradient(145deg, #2a3038, #0e1114 40%, #1d2228); margin: 0 auto;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08), inset 0 0 0 1.5px rgba(255,255,255,.06), 0 50px 100px -30px rgba(64,93,114,.7), 0 30px 60px -30px rgba(0,0,0,.8);
 }
-.toggle:hover { transform: translateX(4px); border-color: rgba(247,231,220,.22); }
-.toggle small { display: block; color: var(--mist); font-size: 13px; margin-top: 2px; }
-.toggle .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); font-size: 18px; transition: background .3s; }
-.toggle .sw { width: 44px; height: 26px; border-radius: 999px; background: #2a333c; position: relative; transition: background .3s; }
-.toggle .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--cream); transition: transform .35s var(--ease); }
-.toggle[aria-pressed="true"] { border-color: rgba(247,231,220,.3); background: linear-gradient(90deg, rgba(64,93,114,.35), var(--surface)); }
-.toggle[aria-pressed="true"] .sw { background: var(--slate-hi); }
-.toggle[aria-pressed="true"] .sw::after { transform: translateX(18px); }
-.toggle[aria-pressed="true"] .ic { background: var(--blush); color: var(--black); }
-.lab-meter { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 8px; font-size: 14px; color: var(--mist); }
-.lab-meter b { font-family: var(--mono); color: var(--blush); font-variant-numeric: tabular-nums; }
-.meter { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 8px; }
-.meter i { display: block; height: 100%; width: 10%; border-radius: 4px; background: linear-gradient(90deg, var(--slate-hi), var(--blush)); transition: width .6s var(--ease); }
-.lab-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
-.lab-actions button { font: 600 14px var(--body); border-radius: 999px; padding: 11px 18px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--cream); transition: background .25s; }
-.lab-actions button:hover { background: rgba(247,231,220,.07); }
-.lab-actions button.main { background: var(--cream); color: var(--black); border-color: var(--cream); }
+.phone::before { content: ""; position: absolute; right: -3px; top: 22%; width: 3px; height: 64px; border-radius: 0 3px 3px 0; background: #22272d; }
+.scr { position: relative; width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: #000; isolation: isolate; }
+.scr canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.island { position: absolute; z-index: 6; top: 10px; left: 50%; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #000; }
+.status { position: absolute; z-index: 5; top: 13px; left: 24px; right: 22px; display: flex; justify-content: space-between; font: 600 13px var(--body); color: #fff; }
+.status i { font-style: normal; letter-spacing: 2px; font-size: 11px; }
+.r-ui { position: absolute; z-index: 4; inset: 0; pointer-events: none; color: #fff; }
+.r-top { position: absolute; top: 50px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; font: 700 16px var(--body); text-shadow: 0 1px 6px rgba(0,0,0,.4); }
+.r-side { position: absolute; right: 10px; bottom: 96px; display: grid; gap: 16px; justify-items: center; font: 600 11px var(--body); text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.r-side div { display: grid; justify-items: center; gap: 3px; }
+.r-side svg { width: 27px; height: 27px; fill: #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,.4)); }
+.r-side .liked svg { fill: #ff3b5c; animation: heart .5s var(--ease); }
+@keyframes heart { 40% { transform: scale(1.35); } }
+.r-bottom { position: absolute; left: 14px; right: 60px; bottom: 26px; display: grid; gap: 8px; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.r-user { display: flex; align-items: center; gap: 8px; font: 600 13px var(--body); }
+.r-user .av { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--blush), var(--slate-hi)); display: grid; place-items: center; color: var(--black); font: 800 11px var(--display); }
+.r-user .fl { border: 1px solid rgba(255,255,255,.7); border-radius: 7px; padding: 2px 8px; font-size: 12px; }
+.r-desc { font: 400 12.5px var(--body); opacity: .92; }
+.r-music { display: flex; gap: 6px; align-items: center; font: 500 11.5px var(--body); opacity: .9; white-space: nowrap; overflow: hidden; }
+.r-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.25); }
+.r-prog i { display: block; height: 100%; width: 0; background: #fff; }
+.capx { position: absolute; z-index: 3; left: 8%; right: 8%; top: 63%; text-align: center; pointer-events: none;
+  font-family: var(--display); font-weight: 900; font-stretch: 100%; font-size: clamp(24px, 7.4vw, 31px); line-height: 1.02; letter-spacing: -.01em;
+  color: #fff; text-transform: uppercase; paint-order: stroke fill; -webkit-text-stroke: 5px #000; }
+.capx span { display: inline-block; margin: 0 .14em; animation: wpop .28s cubic-bezier(.3,1.6,.5,1); }
+.capx span.k { color: #ffd84d; }
+@keyframes wpop { from { transform: scale(.5) translateY(6px); opacity: 0; } }
+.flashx { position: absolute; z-index: 2; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.flashx.go { animation: flash .35s ease-out; }
+@keyframes flash { from { opacity: .7; } to { opacity: 0; } }
+.sound-btn {
+  position: absolute; z-index: 7; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 999px; border: 0; cursor: pointer;
+  font: 600 14px var(--body); color: #000; background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.4); transition: opacity .3s, transform .3s var(--ease);
+}
+.sound-btn:hover { transform: translate(-50%, -50%) scale(1.05); }
+.sound-btn.hide { opacity: 0; pointer-events: none; }
+.mute { position: absolute; z-index: 7; top: 92px; right: 14px; width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(0,0,0,.45); color: #fff; display: grid; place-items: center; backdrop-filter: blur(6px); }
+.mute svg { width: 16px; height: 16px; fill: currentColor; }
+.lab-side { display: grid; gap: 22px; min-width: 0; }
+.lab-side .section-note { margin: 0; }
+.fx-list { display: grid; border-radius: 20px; border: 1px solid var(--line); background: var(--surface); overflow: hidden; }
+.fx {
+  display: flex; align-items: center; gap: 16px; width: 100%; text-align: left; padding: 18px 20px; cursor: pointer;
+  background: transparent; border: 0; border-bottom: 1px solid var(--line); color: var(--cream); font: 500 16px var(--body); transition: background .3s;
+}
+.fx:last-child { border-bottom: 0; }
+.fx:hover { background: rgba(247,231,220,.04); }
+.fx .txt { flex: 1; min-width: 0; }
+.fx small { display: block; color: var(--mist); font-size: 13px; margin-top: 1px; }
+.fx .sw { width: 46px; height: 28px; border-radius: 999px; background: #262e36; position: relative; flex-shrink: 0; transition: background .35s; }
+.fx .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--cream); box-shadow: 0 2px 6px rgba(0,0,0,.4); transition: transform .4s var(--ease); }
+.fx[aria-pressed="true"] .sw { background: var(--slate-hi); }
+.fx[aria-pressed="true"] .sw::after { transform: translateX(18px); }
+.compare { display: inline-flex; padding: 5px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); width: fit-content; position: relative; }
+.compare button { position: relative; z-index: 1; border: 0; background: transparent; color: var(--mist); font: 600 14px var(--body); padding: 10px 20px; border-radius: 999px; cursor: pointer; transition: color .3s; }
+.compare button[aria-pressed="true"] { color: var(--black); }
+.compare .knob { position: absolute; z-index: 0; top: 5px; bottom: 5px; border-radius: 999px; background: var(--blush); transition: left .45s var(--ease), width .45s var(--ease); }
 
 /* Cursor ring (mouse only) */
 .ring {
@@ -378,7 +418,6 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); 
 
 @media (max-width: 860px) {
   .lab { grid-template-columns: 1fr; }
-  .screen { max-width: 360px; width: 100%; margin: 0 auto; }
   .hint { display: none; }
   .about { grid-template-columns: 1fr; }
   .steps { grid-template-columns: 1fr 1fr; }
@@ -456,31 +495,49 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); 
       </div>
     </div>
 
+    <section id="clients">
+      <div class="sec-head reveal"><h2>Creators I've edited for</h2><span class="tcode">00:00:01:00</span></div>
+      <p class="clients-note reveal" id="clientsNote"></p>
+      <div class="clist" id="clist"></div>
+    </section>
+
     <section id="lab">
-      <div class="sec-head reveal"><h2>Turn raw into a clip</h2><span class="tcode">00:00:01:15</span></div>
+      <div class="sec-head reveal"><h2>Raw in. Clip out.</h2><span class="tcode">00:00:02:00</span></div>
       <div class="lab">
-        <div class="screen reveal" id="screen" aria-label="Clip preview">
-          <div class="footage"></div>
-          <div class="subject" aria-hidden="true"><svg viewBox="0 0 200 220"><circle cx="100" cy="62" r="40" fill="#0d1216"/><path d="M18 220c4-62 40-96 82-96s78 34 82 96z" fill="#0d1216"/></svg></div>
-          <div class="grain-raw"></div>
-          <div class="flash" id="flash"></div>
-          <div class="sfx" id="sfx">WHOOSH!</div>
-          <div class="cap" id="cap"></div>
-          <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-          <span class="rawtag" id="rawtag">RAW FOOTAGE</span>
-        </div>
-        <div class="toggles reveal">
-          <p class="section-note" style="margin:0 0 8px">This is what a client sends me. Switch on what I add and watch it turn into a clip.</p>
-          <button class="toggle" type="button" data-fx="text" aria-pressed="false"><span class="ic">Aa</span><span>Text effects<small>Animated captions that hook the viewer</small></span><span class="sw"></span></button>
-          <button class="toggle" type="button" data-fx="music" aria-pressed="false"><span class="ic">♪</span><span>Music<small>A track cut to the rhythm of the edit</small></span><span class="sw"></span></button>
-          <button class="toggle" type="button" data-fx="trans" aria-pressed="false"><span class="ic">✦</span><span>Transitions<small>Punch-ins and flashes on the beat</small></span><span class="sw"></span></button>
-          <button class="toggle" type="button" data-fx="sfx" aria-pressed="false"><span class="ic">!</span><span>Sound effects<small>Whooshes and hits that add energy</small></span><span class="sw"></span></button>
-          <button class="toggle" type="button" data-fx="color" aria-pressed="false"><span class="ic">◐</span><span>Color<small>From flat and grey to rich and clean</small></span><span class="sw"></span></button>
-          <div>
-            <div class="lab-meter"><span>Edit level</span><b id="meterTxt">10%</b></div>
-            <div class="meter"><i id="meter"></i></div>
+        <div class="phone reveal" aria-label="Demo reel">
+          <div class="scr" id="scr">
+            <canvas id="cv"></canvas>
+            <div class="flashx" id="flashx"></div>
+            <div class="capx" id="capx" aria-live="off"></div>
+            <div class="island"></div>
+            <div class="status"><span>9:41</span><i>●●● ▮</i></div>
+            <div class="r-ui">
+              <div class="r-top"><span>Reels</span><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M4 7h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zm8 3.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"/></svg></div>
+              <div class="r-side">
+                <div id="likeBox"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 5.3 3 1.7-1.8 3.2-3 5.3-3 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><span id="likes">1,204</span></div>
+                <div><svg viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.4 1.2 4.6 3.1 6.1L4 21l4.3-1.8c1.2.4 2.4.6 3.7.6 5.5 0 10-3.8 10-8.5S17.5 3 12 3z"/></svg><span>86</span></div>
+                <div><svg viewBox="0 0 24 24"><path d="M21 3 3 10.5l7 2.5 2.5 7L21 3zm-9.4 9.6L17 7l-4.6 7.9-.8-2.3z"/></svg><span>Share</span></div>
+              </div>
+              <div class="r-bottom">
+                <div class="r-user"><span class="av">NS</span><span>nadav.salterrr</span><span class="fl">Follow</span></div>
+                <div class="r-desc" id="rDesc">Raw footage, no edit yet</div>
+                <div class="r-music" id="rMusic">♫ Original audio</div>
+              </div>
+              <div class="r-prog"><i id="prog"></i></div>
+            </div>
+            <button class="mute" type="button" id="mute" aria-label="Mute"><svg viewBox="0 0 24 24"><path id="muteIcon" d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg></button>
+            <button class="sound-btn" type="button" id="soundBtn"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>Tap for sound</button>
           </div>
-          <div class="lab-actions"><button type="button" class="main" id="allOn">Full edit</button><button type="button" id="allOff">Back to raw</button></div>
+        </div>
+        <div class="lab-side reveal">
+          <p class="section-note">This is a raw clip, the way a client sends it. Turn on what I add and hear the difference. Sound on.</p>
+          <div class="compare" id="compare"><span class="knob" id="knob"></span><button type="button" data-mode="raw" aria-pressed="true">Raw</button><button type="button" data-mode="edit" aria-pressed="false">My edit</button></div>
+          <div class="fx-list">
+            <button class="fx" type="button" data-fx="captions" aria-pressed="false"><span class="txt">Captions<small>Word-by-word text that pops on the beat</small></span><span class="sw"></span></button>
+            <button class="fx" type="button" data-fx="music" aria-pressed="false"><span class="txt">Music<small>A track that drives the pace</small></span><span class="sw"></span></button>
+            <button class="fx" type="button" data-fx="effects" aria-pressed="false"><span class="txt">Cuts &amp; sound effects<small>Punch-ins, flashes and whooshes on the drop</small></span><span class="sw"></span></button>
+            <button class="fx" type="button" data-fx="color" aria-pressed="false"><span class="txt">Color grade<small>Flat and grey to clean and cinematic</small></span><span class="sw"></span></button>
+          </div>
         </div>
       </div>
     </section>
@@ -762,43 +819,269 @@ document.querySelectorAll("button.copy").forEach(b => b.addEventListener("click"
   })(last);
 })();
 
-/* ===== Build-a-clip playground ===== */
+/* ===== Clients ===== 
+   To add a creator, copy one block below and change the details. */
+const CLIENTS = [
+  { name: "K. Shami", initials: "KS", handle: "@syrianpsych0", subs: 312000,
+    about: "Self-improvement and looksmaxxing creator known for his reaction videos and tier lists. I edit short-form clips for his channel.",
+    links: [["YouTube", "https://www.youtube.com/@syrianpsych0"], ["TikTok", "https://www.tiktok.com/@syrianpsycho"], ["Instagram", "https://www.instagram.com/syrianpsycho/"]] },
+  { name: "Dillon Latham", initials: "DL", handle: "@dillonlatham", subs: 1060000,
+    about: "Hair, style and glow-up creator, and founder of the hair care brand Simpletics. I edit short-form clips for his channel.",
+    links: [["YouTube", "https://www.youtube.com/@dillonlatham"], ["X", "https://x.com/Dillonxlatham"]] }
+];
+const ICONS = {
+  YouTube: '<path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15.1V8.9l5.8 3.1-5.8 3.1z"/>',
+  TikTok: '<path d="M16.6 2h-3.4v13.3a2.9 2.9 0 1 1-2-2.8V9a6.4 6.4 0 1 0 5.4 6.3V8.6a7.9 7.9 0 0 0 4.4 1.4V6.6a4.5 4.5 0 0 1-4.4-4.6z"/>',
+  Instagram: '<path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4zM17.3 5.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zM16.5 2h-9A5.5 5.5 0 0 0 2 7.5v9A5.5 5.5 0 0 0 7.5 22h9a5.5 5.5 0 0 0 5.5-5.5v-9A5.5 5.5 0 0 0 16.5 2zm3.7 14.5a3.7 3.7 0 0 1-3.7 3.7h-9a3.7 3.7 0 0 1-3.7-3.7v-9a3.7 3.7 0 0 1 3.7-3.7h9a3.7 3.7 0 0 1 3.7 3.7z"/>',
+  X: '<path d="M17.8 2.5h3.3l-7.2 8.2 8.5 10.8h-6.7l-5.2-6.6-5.9 6.6H1.3l7.7-8.8L.9 2.5h6.8l4.7 6.1 5.4-6.1zm-1.2 17h1.8L6.5 4.3H4.6z"/>'
+};
 (function () {
-  const screen = document.getElementById("screen"), cap = document.getElementById("cap"), flash = document.getElementById("flash"), sfx = document.getElementById("sfx");
-  const meter = document.getElementById("meter"), meterTxt = document.getElementById("meterTxt"), rawtag = document.getElementById("rawtag");
-  const toggles = [...document.querySelectorAll(".toggle")];
-  const LINES = [["Wait for", "it"], ["This changed", "everything"], ["You won't", "believe this"], ["Watch till", "the end"]];
-  let line = 0, word = 0;
-  function update() {
-    const on = toggles.filter(t => t.getAttribute("aria-pressed") === "true").length;
-    const pct = Math.round(10 + on * 18);
-    meter.style.width = pct + "%"; meterTxt.textContent = pct + "%";
-    rawtag.textContent = on === 0 ? "RAW FOOTAGE" : on === toggles.length ? "FINAL EDIT" : "EDITING…";
+  const list = document.getElementById("clist");
+  const fmt = n => n >= 1e6 ? (Math.floor(n / 1e4) / 100).toFixed(2).replace(/\.?0+$/, "") + "M" : Math.round(n / 1e3) + "K";
+  const total = CLIENTS.reduce((s, c) => s + c.subs, 0);
+  document.getElementById("clientsNote").innerHTML = "Short-form clips for YouTube creators with <b>" + fmt(total) + "+</b> subscribers between them.";
+  CLIENTS.forEach(c => {
+    const el = document.createElement("article"); el.className = "client";
+    el.innerHTML = '<div class="c-top"><span class="avatar"></span><div><h3 class="c-name"></h3><div class="c-handle"></div></div></div>' +
+      '<div class="c-stat"><b data-to="' + c.subs + '">0</b><span>YouTube subscribers</span></div><p class="c-about"></p><div class="socials"></div>';
+    el.querySelector(".avatar").textContent = c.initials;
+    el.querySelector(".c-name").textContent = c.name;
+    el.querySelector(".c-handle").textContent = c.handle;
+    el.querySelector(".c-about").textContent = c.about;
+    const s = el.querySelector(".socials");
+    c.links.forEach(([label, url]) => {
+      const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener";
+      a.innerHTML = '<svg viewBox="0 0 24 24">' + (ICONS[label] || "") + "</svg><span></span>";
+      a.querySelector("span").textContent = label;
+      s.appendChild(a);
+    });
+    spotlight(el);
+    list.appendChild(el);
+  });
+  const next = document.createElement("a"); next.className = "client next"; next.href = "#contact";
+  next.innerHTML = '<span class="plus">+</span><h3 class="c-name">Your channel</h3><p>Want clips like these? Let\'s talk.</p>';
+  spotlight(next); list.appendChild(next);
+  /* count up subscriber numbers when they come into view */
+  const counters = [...list.querySelectorAll("[data-to]")];
+  const run = b => { const to = +b.dataset.to, t0 = performance.now();
+    (function step(n) { const p = Math.min(1, (n - t0) / 1400), e = 1 - Math.pow(1 - p, 3); b.textContent = fmt(Math.max(1000, to * e)); if (p < 1) requestAnimationFrame(step); })(t0); };
+  if ("IntersectionObserver" in window && !reduce) {
+    const o = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { run(e.target); o.unobserve(e.target); } }), { threshold: .6 });
+    counters.forEach(c => o.observe(c));
+  } else counters.forEach(c => c.textContent = fmt(+c.dataset.to));
+})();
+
+/* ===== Demo reel: raw in, clip out ===== */
+(function () {
+  const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+  const capx = document.getElementById("capx"), flashx = document.getElementById("flashx"), prog = document.getElementById("prog");
+  const likesEl = document.getElementById("likes"), likeBox = document.getElementById("likeBox");
+  const rDesc = document.getElementById("rDesc"), rMusic = document.getElementById("rMusic");
+  const soundBtn = document.getElementById("soundBtn"), muteBtn = document.getElementById("mute"), muteIcon = document.getElementById("muteIcon");
+  const fxBtns = [...document.querySelectorAll(".fx")], compare = document.getElementById("compare"), knob = document.getElementById("knob");
+  const state = { captions: false, music: false, effects: false, color: false };
+  const BPM = 96, BEAT = 60 / BPM, LOOP = 16;
+  const LINES = [["NOBODY", "TALKS"], ["ABOUT", "THIS"], ["BUT", "IT", "CHANGES"], ["*EVERYTHING*"], ["WATCH", "WHAT"], ["HAPPENS", "*NEXT*"], ["STAY", "TILL"], ["THE", "*END*"]];
+  const CHORDS = [[110, [220, 261.63, 329.63]], [87.31, [174.61, 220, 261.63]], [130.81, [261.63, 329.63, 392]], [98, [196, 246.94, 293.66]]];
+  const perf = () => performance.now() / 1000;
+  let likes = 1204, punch = 0, lastHalf = -1, shownLine = -1, shownWords = 0, visible = true;
+
+  /* ---------- UI state ---------- */
+  function sync() {
+    fxBtns.forEach(b => b.setAttribute("aria-pressed", state[b.dataset.fx]));
+    const on = Object.values(state).filter(Boolean).length;
+    const mode = on === 0 ? "raw" : on === 4 ? "edit" : null;
+    compare.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
+    const sel = compare.querySelector('button[aria-pressed="true"]');
+    knob.style.opacity = sel ? 1 : 0;
+    if (sel) { knob.style.left = sel.offsetLeft + "px"; knob.style.width = sel.offsetWidth + "px"; }
+    cv.style.filter = state.color ? "saturate(1.3) contrast(1.12) brightness(1.02)" : "grayscale(.6) contrast(.8) brightness(1.14) sepia(.1)";
+    rDesc.textContent = on === 0 ? "Raw footage, no edit yet" : on === 4 ? "Edited by @nadav.salterrr ✂️" : "Editing… " + on + "/4";
+    rMusic.textContent = state.music ? "♫ Nadav's edit · Original track" : "♫ Original audio";
+    if (!state.captions) { capx.innerHTML = ""; shownLine = -1; shownWords = 0; }
+    if (bus.music) {
+      const t = actx.currentTime;
+      bus.music.gain.setTargetAtTime(state.music ? .9 : 0, t, .04);
+      bus.sfx.gain.setTargetAtTime(state.effects ? 1 : 0, t, .04);
+      bus.ui.gain.setTargetAtTime(state.captions ? 1 : 0, t, .04);
+    }
   }
-  function set(t, v) { t.setAttribute("aria-pressed", v); screen.classList.toggle("fx-" + t.dataset.fx, v); update(); }
-  toggles.forEach(t => t.addEventListener("click", () => set(t, t.getAttribute("aria-pressed") !== "true")));
-  document.getElementById("allOn").onclick = () => toggles.forEach((t, i) => setTimeout(() => set(t, true), i * 220));
-  document.getElementById("allOff").onclick = () => toggles.forEach(t => set(t, false));
-  update();
-  /* captions pop word by word */
-  setInterval(() => {
-    const l = LINES[line];
-    word++;
-    if (word > l.length) { word = 0; line = (line + 1) % LINES.length; cap.innerHTML = ""; return; }
-    cap.innerHTML = l.slice(0, word).map((w, i) => i === l.length - 1 ? "<b>" + w + "</b>" : w).join("<br>");
-  }, 700);
-  /* beat: transitions and sound effects */
-  setInterval(() => {
-    if (screen.classList.contains("fx-trans")) {
-      flash.classList.remove("go"); void flash.offsetWidth; flash.classList.add("go");
-      screen.classList.add("punch"); setTimeout(() => screen.classList.remove("punch"), 600);
+  fxBtns.forEach(b => b.addEventListener("click", () => { state[b.dataset.fx] = !state[b.dataset.fx]; sync(); }));
+  function setAll(v, stagger) { Object.keys(state).forEach((k, i) => setTimeout(() => { state[k] = v; sync(); }, stagger ? i * 260 : 0)); }
+  compare.addEventListener("click", e => { const b = e.target.closest("button"); if (b) setAll(b.dataset.mode === "edit", b.dataset.mode === "edit"); });
+  addEventListener("resize", sync);
+
+  /* ---------- Audio (all made in the browser, nothing to download) ---------- */
+  let actx = null, master = null, noise = null, offset = 0, nextBeat = 0, soundOn = false;
+  const bus = {};
+  function startAudio() {
+    if (!actx) {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      actx = new AC();
+      const comp = actx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
+      master = actx.createGain(); master.gain.value = 0;
+      master.connect(comp); comp.connect(actx.destination);
+      ["music", "sfx", "ui"].forEach(k => { bus[k] = actx.createGain(); bus[k].gain.value = 0; bus[k].connect(master); });
+      noise = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      offset = actx.currentTime - perf();
+      nextBeat = Math.ceil((actx.currentTime - offset) / BEAT);
+      setInterval(schedule, 25);
     }
-    if (screen.classList.contains("fx-sfx")) {
-      const words = ["WHOOSH!", "BOOM!", "DING!", "POP!"];
-      sfx.textContent = words[Math.floor(Math.random() * words.length)];
-      sfx.classList.add("go"); setTimeout(() => sfx.classList.remove("go"), 700);
+    actx.resume();
+    soundOn = true; setMasterGain(); sync();
+  }
+  function setMasterGain() { if (master) master.gain.setTargetAtTime(soundOn && visible ? .85 : 0, actx.currentTime, .05); }
+  function env(g, t, a, peak, rel) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + rel); }
+  function osc(type, f, t, dur, peak, out, a, f2) {
+    const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur * .4);
+    env(g, t, a || .005, peak, dur); o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + .1); return o;
+  }
+  function burst(t, dur, peak, type, freq, q, out, f2) {
+    const s = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+    s.buffer = noise; f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q || .7;
+    if (f2) f.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    env(g, t, type === "bandpass" && f2 ? dur * .6 : .003, peak, type === "bandpass" && f2 ? dur * .4 : dur);
+    s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + dur + .1);
+  }
+  const kick = t => osc("sine", 150, t, .35, .9, bus.music, .003, 42);
+  const clap = t => { burst(t, .16, .35, "bandpass", 1600, .9, bus.music); burst(t + .012, .12, .25, "bandpass", 1300, .9, bus.music); };
+  const hat = (t, v) => burst(t, .045, v, "highpass", 8000, .5, bus.music);
+  function bass(t, f, dur) {
+    const o = actx.createOscillator(), lp = actx.createBiquadFilter(), g = actx.createGain();
+    o.type = "sawtooth"; o.frequency.value = f / 2; lp.type = "lowpass"; lp.frequency.value = 260;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.32, t + .02); g.gain.setTargetAtTime(0.0001, t + dur * .8, .08);
+    o.connect(lp); lp.connect(g); g.connect(bus.music); o.start(t); o.stop(t + dur + .4);
+  }
+  function pad(t, freqs, dur) {
+    const lp = actx.createBiquadFilter(), g = actx.createGain(); lp.type = "lowpass"; lp.frequency.value = 1400;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.06, t + .25); g.gain.setTargetAtTime(0.0001, t + dur - .2, .15);
+    lp.connect(g); g.connect(bus.music);
+    freqs.forEach(f => [-6, 6].forEach(c => { const o = actx.createOscillator(); o.type = "triangle"; o.frequency.value = f; o.detune.value = c; o.connect(lp); o.start(t); o.stop(t + dur + .6); }));
+  }
+  const whoosh = t => burst(t, .5, .4, "bandpass", 300, 1.4, bus.sfx, 5000);
+  const boom = t => { osc("sine", 95, t, 1.1, .8, bus.sfx, .004, 32); burst(t, .25, .3, "lowpass", 500, .7, bus.sfx); };
+  const tick = t => osc("sine", 1500, t, .05, .12, bus.ui, .002);
+  function schedule() {
+    while ((nextBeat * BEAT + offset) < actx.currentTime + .15) {
+      const t = nextBeat * BEAT + offset, lb = ((nextBeat % LOOP) + LOOP) % LOOP, bar = Math.floor(lb / 4), bib = lb % 4;
+      const [root, chord] = CHORDS[bar];
+      if (bib === 0 || bib === 2) kick(t);
+      if (bib === 2 && bar % 2 === 1) kick(t + BEAT * .5);
+      if (bib === 1 || bib === 3) clap(t);
+      hat(t, .09); hat(t + BEAT / 2, .05);
+      if (bib === 0) { bass(t, root, BEAT * 2); pad(t, chord, BEAT * 4); }
+      if (bib === 2) bass(t, root, BEAT * 1.5);
+      if (lb === 15 || lb === 7) whoosh(t + BEAT - .5);
+      if (lb === 0 || lb === 8) boom(t);
+      for (let h = 0; h < 2; h++) { const hh = lb * 2 + h, line = LINES[Math.floor(hh / 4)]; if (hh % 4 < line.length) tick(t + h * BEAT / 2); }
+      nextBeat++;
     }
-  }, 2100);
+  }
+  soundBtn.addEventListener("click", () => { startAudio(); soundBtn.classList.add("hide"); if (!Object.values(state).some(Boolean)) setAll(true, true); });
+  muteBtn.addEventListener("click", () => {
+    if (!actx || !soundOn) { startAudio(); soundBtn.classList.add("hide"); }
+    else { soundOn = false; setMasterGain(); }
+    muteIcon.setAttribute("d", soundOn ? "M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z" : "M4 9v6h4l5 4V5L8 9H4zm15.6 3 2.1-2.1-1.1-1.1-2.1 2.1-2.1-2.1-1.1 1.1 2.1 2.1-2.1 2.1 1.1 1.1 2.1-2.1 2.1 2.1 1.1-1.1z");
+    muteBtn.setAttribute("aria-label", soundOn ? "Mute" : "Unmute");
+  });
+  if ("IntersectionObserver" in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; if (actx) setMasterGain(); }, { threshold: .2 }).observe(cv);
+
+  /* ---------- Picture: a podcast set, drawn live ---------- */
+  let W = 0, H = 0, dpr = 1;
+  function size() { dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.round(cv.clientWidth * dpr); H = cv.height = Math.round(cv.clientHeight * dpr); }
+  size(); if ("ResizeObserver" in window) new ResizeObserver(size).observe(cv);
+  const bokeh = Array.from({ length: 9 }, (_, i) => ({ x: Math.random(), y: Math.random() * .55, r: .04 + Math.random() * .07, s: .2 + Math.random() * .6, warm: i % 3 !== 0 }));
+  function scene(t) {
+    const u = W / 100;
+    const sky = ctx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#1d2833"); sky.addColorStop(1, "#090c10");
+    ctx.fillStyle = sky; ctx.fillRect(-W, -H, W * 3, H * 3);
+    for (let i = -2; i < 9; i++) { ctx.fillStyle = i % 2 ? "rgba(255,255,255,.025)" : "rgba(0,0,0,.12)"; ctx.fillRect(i * 13 * u, 0, 12 * u, H * .82); }
+    const neon = ctx.createLinearGradient(82 * u, 0, 100 * u, 0); neon.addColorStop(0, "rgba(95,132,160,0)"); neon.addColorStop(.5, "rgba(120,170,210,.55)"); neon.addColorStop(1, "rgba(95,132,160,0)");
+    ctx.fillStyle = neon; ctx.fillRect(80 * u, H * .05, 22 * u, H * .62);
+    ctx.fillStyle = "rgba(200,230,255,.9)"; ctx.fillRect(90.5 * u, H * .07, 1.1 * u, H * .58);
+    bokeh.forEach(b => {
+      const x = ((b.x + Math.sin(t * .1 * b.s) * .03) * W), y = (b.y + Math.cos(t * .13 * b.s) * .02) * H, r = b.r * W;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r); const c = b.warm ? "255,180,120" : "150,190,230";
+      g.addColorStop(0, "rgba(" + c + ",.32)"); g.addColorStop(.7, "rgba(" + c + ",.12)"); g.addColorStop(1, "rgba(" + c + ",0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+    });
+    const lamp = ctx.createRadialGradient(10 * u, H * .3, 0, 10 * u, H * .3, 45 * u); lamp.addColorStop(0, "rgba(255,170,110,.35)"); lamp.addColorStop(1, "rgba(255,170,110,0)");
+    ctx.fillStyle = lamp; ctx.fillRect(-W, -H, W * 3, H * 3);
+    const talk = Math.max(0, Math.sin(t * 7.3) * Math.sin(t * 2.1));
+    const hx = 50 * u + Math.sin(t * .7) * 1.2 * u, hy = H * .5 + Math.sin(t * 1.3) * .5 * u - talk * .8 * u;
+    const body = ctx.createLinearGradient(0, H * .62, 0, H); body.addColorStop(0, "#232b33"); body.addColorStop(1, "#0f1317");
+    ctx.fillStyle = body; ctx.beginPath();
+    ctx.moveTo(4 * u, H); ctx.bezierCurveTo(6 * u, H * .78, 18 * u, H * .7, 36 * u, H * .67);
+    ctx.quadraticCurveTo(50 * u, H * .64, 64 * u, H * .67); ctx.bezierCurveTo(82 * u, H * .7, 94 * u, H * .78, 96 * u, H); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(140,190,230,.35)"; ctx.lineWidth = 1.2 * u; ctx.beginPath(); ctx.moveTo(64 * u, H * .672); ctx.bezierCurveTo(82 * u, H * .7, 94 * u, H * .78, 96 * u, H); ctx.stroke();
+    ctx.fillStyle = "#7a5646"; ctx.fillRect(hx - 6 * u, hy + 10 * u, 12 * u, 14 * u);
+    const skin = ctx.createRadialGradient(hx - 6 * u, hy - 6 * u, 2 * u, hx, hy, 20 * u); skin.addColorStop(0, "#d8a588"); skin.addColorStop(.6, "#9a6b55"); skin.addColorStop(1, "#4a3027");
+    ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(hx, hy, 14 * u, 17.5 * u, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(hx + 7 * u, hy + 2 * u, 7 * u, 15 * u, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#15110f"; ctx.beginPath(); ctx.ellipse(hx, hy - 9 * u, 15 * u, 11 * u, 0, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(hx, hy - 9 * u, 15 * u, 4 * u, 0, 0, Math.PI); ctx.fill();
+    const blink = (t % 4.2) < .12 ? .15 : 1;
+    [-1, 1].forEach(s => {
+      ctx.fillStyle = "rgba(30,18,14,.55)"; ctx.beginPath(); ctx.ellipse(hx + s * 5.5 * u - 1 * u, hy - 3.6 * u, 3.6 * u, .9 * u, s * -.08, 0, 7); ctx.fill();
+      ctx.fillStyle = "#1a100c"; ctx.beginPath(); ctx.ellipse(hx + s * 5.5 * u - 1 * u, hy, 1.7 * u, 1.3 * u * blink, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.beginPath(); ctx.arc(hx + s * 5.5 * u - 1.6 * u, hy - .4 * u, .35 * u, 0, 7); ctx.fill();
+    });
+    ctx.fillStyle = "rgba(60,30,22,.35)"; ctx.beginPath(); ctx.ellipse(hx + .5 * u, hy + 5 * u, 1.6 * u, 3 * u, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "rgba(40,20,15,.6)"; ctx.beginPath(); ctx.ellipse(hx - .5 * u, hy + 10.5 * u, 3.6 * u, (.8 + talk * 1.6) * u, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#0b0b0c"; ctx.lineWidth = 3 * u; ctx.beginPath(); ctx.ellipse(hx, hy - 2 * u, 17 * u, 21 * u, 0, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke();
+    [-1, 1].forEach(s => { ctx.fillStyle = "#121315"; ctx.beginPath(); ctx.ellipse(hx + s * 15.5 * u, hy + 1 * u, 4.5 * u, 7.5 * u, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.ellipse(hx + s * 15.5 * u - 1 * u, hy - 2 * u, 1.5 * u, 3.5 * u, 0, 0, 7); ctx.fill(); });
+    ctx.strokeStyle = "#08090a"; ctx.lineWidth = 2.2 * u; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(108 * u, H * .3); ctx.lineTo(80 * u, H * .5); ctx.lineTo(70 * u, H * .58); ctx.stroke();
+    ctx.save(); ctx.translate(66 * u, H * .62); ctx.rotate(-.45);
+    const mic = ctx.createLinearGradient(-5 * u, 0, 5 * u, 0); mic.addColorStop(0, "#1a1c1f"); mic.addColorStop(.5, "#3a3e44"); mic.addColorStop(1, "#141518");
+    ctx.fillStyle = mic; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-5 * u, -11 * u, 10 * u, 24 * u, 5 * u) : ctx.rect(-5 * u, -11 * u, 10 * u, 24 * u); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.06)"; for (let i = 0; i < 6; i++) ctx.fillRect(-4 * u, -9 * u + i * 2.2 * u, 8 * u, .5 * u);
+    ctx.restore();
+  }
+  let last = perf();
+  function frame() {
+    const t = perf(), dt = Math.min(.05, t - last); last = t;
+    const bt = (actx ? (actx.currentTime - offset) : t);
+    const half = Math.floor(bt / (BEAT / 2)), lb = ((Math.floor(bt / BEAT) % LOOP) + LOOP) % LOOP;
+    if (half !== lastHalf) {
+      lastHalf = half;
+      const hh = ((half % (LOOP * 2)) + LOOP * 2) % (LOOP * 2);
+      if (hh % 2 === 0 && state.effects) {
+        if (lb === 0 || lb === 8) { punch = .16; flashx.classList.remove("go"); void flashx.offsetWidth; flashx.classList.add("go"); }
+        else if (lb === 4 || lb === 12) punch = .08;
+      }
+      if (state.captions) {
+        const li = Math.floor(hh / 4), wi = hh % 4, line = LINES[li];
+        if (li !== shownLine) { capx.innerHTML = ""; shownLine = li; shownWords = 0; }
+        if (wi < line.length && shownWords <= wi) {
+          const w = line[wi], sp = document.createElement("span"); sp.textContent = w.replace(/\*/g, "") + " ";
+          if (w.startsWith("*")) sp.className = "k"; capx.appendChild(sp); shownWords = wi + 1;
+        }
+      }
+      if (hh % 2 === 0 && Object.values(state).filter(Boolean).length >= 2) {
+        likes += 3 + Math.floor(Math.random() * 9); likesEl.textContent = likes.toLocaleString("en-US");
+        if (lb === 0) { likeBox.classList.remove("liked"); void likeBox.offsetWidth; likeBox.classList.add("liked"); }
+      }
+    }
+    prog.style.width = (((bt % (BEAT * LOOP)) + BEAT * LOOP) % (BEAT * LOOP)) / (BEAT * LOOP) * 100 + "%";
+    punch *= Math.exp(-dt * 7);
+    if (visible && W) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+      const z = 1 + punch, dx = Math.sin(t * .6) * W * .006, dy = Math.cos(t * .8) * H * .004;
+      ctx.translate(W / 2, H * .5); ctx.scale(z, z); ctx.translate(-W / 2 + dx, -H * .5 + dy);
+      scene(t);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (state.color) {
+        const v = ctx.createRadialGradient(W / 2, H * .5, H * .2, W / 2, H * .5, H * .75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.55)");
+        ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  sync(); requestAnimationFrame(frame);
 })();
 
 /* ===== Hero name stretches toward the cursor ===== */
