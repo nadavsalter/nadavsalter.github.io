@@ -211,7 +211,7 @@ h2 { font-family: var(--display); font-weight: 800; font-stretch: 115%; font-siz
   --mx: 50%; --my: 50%;
   position: relative; aspect-ratio: 4 / 5; max-width: 100%; border-radius: 16px; overflow: hidden; cursor: pointer;
   background: var(--surface-2); border: 1px solid var(--line); padding: 0; display: block; width: 100%;
-  transition: transform .5s var(--ease), box-shadow .5s var(--ease), border-color .4s;
+  transition: transform .18s cubic-bezier(.2,.9,.3,1.2), box-shadow .3s var(--ease), border-color .3s;
 }
 .thumb:hover { transform: translateY(-6px); box-shadow: 0 24px 60px -24px rgba(95,132,160,.55); border-color: rgba(247,231,220,.22); }
 .thumb::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s;
@@ -723,8 +723,8 @@ function spotlight(el, tilt) {
     el.style.setProperty("--mx", x + "px");
     el.style.setProperty("--my", y + "px");
     if (tilt && !reduce && e.pointerType === "mouse") {
-      const rx = ((y / r.height) - .5) * -10, ry = ((x / r.width) - .5) * 12;
-      el.style.transform = "perspective(800px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translateY(-6px)";
+      const rx = ((y / r.height) - .5) * -32, ry = ((x / r.width) - .5) * 38;
+      el.style.transform = "perspective(520px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translateY(-10px) scale(1.05)";
     }
   });
   if (tilt) el.addEventListener("pointerleave", () => { el.style.transform = ""; });
@@ -741,7 +741,6 @@ function renderGrid() {
   items.forEach((it, i) => {
     const card = document.createElement("article"); card.className = "card"; card.style.animationDelay = (i * 60) + "ms";
     const btn = document.createElement("button"); btn.className = "thumb"; btn.type = "button"; btn.setAttribute("aria-label", "Play " + it.title);
-    btn.dataset.cursor = "Play";
     spotlight(btn, true);
     if (it.video) {
       const v = document.createElement("video");
@@ -936,6 +935,18 @@ const ICONS = {
   const fxBtns = [...document.querySelectorAll(".fx")], compare = document.getElementById("compare"), knob = document.getElementById("knob");
   const state = { captions: false, music: false, effects: false, color: false };
   const BPM = 96, BEAT = 60 / BPM, LOOP = 16;
+  /* what he says, and where his speech sits inside each 5-second take (measured from the audio) */
+  const SCRIPT = "";
+  const SPEECH = [[0.14, 1.94], [2.42, 2.52], [2.7, 2.96], [3.08, 3.36], [3.52, 4.56]], TAKE = BEAT * 8;
+  const WORDS = (() => {
+    const raw = SCRIPT.trim().split(/\s+/).filter(Boolean); if (!raw.length) return [];
+    const weight = raw.map(w => w.replace(/[^\w']/g, "").length + 2), tot = weight.reduce((a, b) => a + b, 0);
+    const speak = SPEECH.reduce((a, [x, y]) => a + (y - x), 0);
+    const at = p => { let left = p * speak; for (const [x, y] of SPEECH) { if (left <= y - x) return x + left; left -= y - x; } return SPEECH[SPEECH.length - 1][1]; };
+    let acc = 0; const out = raw.map((w, i) => { const a = at(acc / tot); acc += weight[i]; return { w, a, b: at(acc / tot) }; });
+    let line = 0, n = 0; out.forEach((o, i) => { o.line = line; n++; if (n >= 3 || /[.?!,]$/.test(o.w)) { line++; n = 0; } });
+    return out;
+  })();
   const LINES = [["Nobody", "talks", "about", "this"], ["but", "it", "changes", "*everything*"], ["the", "first", "second", "*matters*"], ["so", "hook", "them", "*fast*"],
     ["then", "keep", "the", "*pace*"], ["cut", "every", "dead", "*second*"], ["and", "they", "watch", "*longer*"], ["till", "the", "very", "*end*"]];
   const CHORDS = [[110, [220, 261.63, 329.63]], [87.31, [174.61, 220, 261.63]], [130.81, [261.63, 329.63, 392]], [98, [196, 246.94, 293.66]]];
@@ -980,12 +991,14 @@ const ICONS = {
       ["music", "sfx", "ui"].forEach(k => { bus[k] = actx.createGain(); bus[k].gain.value = 0; bus[k].connect(master); });
       /* the raw "talking" track: a muffled, made-up voice in a room, always there like the original audio */
       const hp = actx.createBiquadFilter(), lp = actx.createBiquadFilter(), lp2 = actx.createBiquadFilter(), dry = actx.createGain(), wet = actx.createGain(), verb = actx.createConvolver();
-      hp.type = "highpass"; hp.frequency.value = 110; lp.type = "lowpass"; lp.frequency.value = 1150; lp.Q.value = .2; lp2.type = "lowpass"; lp2.frequency.value = 1600; lp2.Q.value = .2;
+      hp.type = "highpass"; hp.frequency.value = 130; lp.type = "lowpass"; lp.frequency.value = 2400; lp.Q.value = .3; lp2.type = "lowpass"; lp2.frequency.value = 3200; lp2.Q.value = .2;
       const ir = actx.createBuffer(2, Math.floor(actx.sampleRate * 1.3), actx.sampleRate);
       for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3.2); }
-      verb.buffer = ir; dry.gain.value = .75; wet.gain.value = .32;
-      bus.voiceIn = actx.createGain(); bus.voice = actx.createGain(); bus.voice.gain.value = .5;
+      verb.buffer = ir; dry.gain.value = .85; wet.gain.value = .2;
+      bus.voiceIn = actx.createGain(); bus.voice = actx.createGain(); bus.voice.gain.value = 1;
       bus.voiceIn.connect(hp); hp.connect(lp); lp.connect(lp2); lp2.connect(dry); lp2.connect(verb); verb.connect(wet); dry.connect(bus.voice); wet.connect(bus.voice); bus.voice.connect(master);
+      voiceAn = actx.createAnalyser(); voiceAn.fftSize = 512; bus.voice.connect(voiceAn);
+      fetch("demo-voice.mp3").then(r => r.arrayBuffer()).then(b => actx.decodeAudioData(b)).then(buf => { voiceBuf = buf; }).catch(() => {});
       vNext = actx.currentTime + .25;
       noise = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
       const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -1031,7 +1044,7 @@ const ICONS = {
   /* made-up speech: one continuous voice per sentence. The pitch rises and falls like a real sentence,
      the vowel shapes glide into each other and the loudness swells syllable by syllable. */
   const VOWELS = [[730, 1090, 2440], [270, 2290, 3010], [530, 1840, 2480], [570, 840, 2410], [300, 870, 2240], [660, 1720, 2410], [490, 1350, 1690], [400, 2000, 2550], [440, 1020, 2240]];
-  let vNext = 0; const sylls = [];
+  let vNext = 0, voiceBuf = null, voiceAn = null; const sylls = []; const vbuf = new Float32Array(512);
   const rnd = (a, b) => a + Math.random() * (b - a);
   function phrase(t0) {
     const n = 4 + Math.floor(Math.random() * 11), base = rnd(102, 128);
@@ -1068,7 +1081,6 @@ const ICONS = {
     while (vNext < actx.currentTime + .3) vNext = phrase(Math.max(vNext, actx.currentTime + .05)) + rnd(.18, .55);
   }
   function schedule() {
-    voiceTick();
     while ((nextBeat * BEAT + offset) < actx.currentTime + .15) {
       const t = nextBeat * BEAT + offset, lb = ((nextBeat % LOOP) + LOOP) % LOOP, bar = Math.floor(lb / 4), bib = lb % 4;
       const [root, chord] = CHORDS[bar];
@@ -1080,6 +1092,7 @@ const ICONS = {
       if (bib === 2) bass(t, root, BEAT * 1.5);
       if (lb === 15 || lb === 7) whoosh(t + BEAT - .5);
       if (lb === 0 || lb === 8) boom(t);
+      if ((lb === 0 || lb === 8) && voiceBuf) { const v = actx.createBufferSource(); v.buffer = voiceBuf; v.connect(bus.voiceIn); v.start(t); }
       for (let h = 0; h < 2; h++) { const hh = lb * 2 + h, line = LINES[Math.floor(hh / 4)]; if (hh % 4 < line.length) tick(t + h * BEAT / 2); }
       nextBeat++;
     }
@@ -1158,18 +1171,26 @@ const ICONS = {
         if (lb === 0 || lb === 8) { punch = .16; flashx.classList.remove("go"); void flashx.offsetWidth; flashx.classList.add("go"); }
         else if (lb === 4 || lb === 12) punch = .08;
       }
-      if (state.captions) {
-        const li = Math.floor(hh / 4), wi = hh % 4, line = LINES[li];
-        if (li !== shownLine) {
-          capx.innerHTML = ""; shownLine = li;
-          line.forEach(w => { const sp = document.createElement("span"); sp.className = "w" + (w.startsWith("*") ? " k" : ""); sp.textContent = w.replace(/\*/g, ""); capx.appendChild(sp); });
-        }
-        [...capx.children].forEach((sp, i) => { sp.classList.toggle("in", i <= wi); sp.classList.toggle("on", i === wi); });
-      }
       if (hh % 2 === 0 && Object.values(state).filter(Boolean).length >= 2) {
         likes += 3 + Math.floor(Math.random() * 9); likesEl.textContent = likes.toLocaleString("en-US");
         if (lb === 0) { likeBox.classList.remove("liked"); void likeBox.offsetWidth; likeBox.classList.add("liked"); }
       }
+    }
+    if (state.captions && !WORDS.length) {
+      const hh = ((half % (LOOP * 2)) + LOOP * 2) % (LOOP * 2), li = Math.floor(hh / 4), wi = hh % 4, line = LINES[li];
+      if (li !== shownLine) { capx.innerHTML = ""; shownLine = li; line.forEach(w => { const sp = document.createElement("span"); sp.className = "w" + (w.startsWith("*") ? " k" : ""); sp.textContent = w.replace(/\*/g, ""); capx.appendChild(sp); }); }
+      [...capx.children].forEach((sp, i) => { sp.classList.toggle("in", i <= wi); sp.classList.toggle("on", i === wi); });
+    }
+    if (state.captions && WORDS.length) {
+      const cp = ((bt % TAKE) + TAKE) % TAKE;
+      let wi = -1; WORDS.forEach((o, i) => { if (cp >= o.a) wi = i; });
+      const cur = wi >= 0 && cp <= WORDS[WORDS.length - 1].b + .6 ? WORDS[wi] : null;
+      const li = cur ? cur.line : -1;
+      if (li !== shownLine) {
+        capx.innerHTML = ""; shownLine = li;
+        WORDS.filter(o => o.line === li).forEach(o => { const sp = document.createElement("span"); sp.className = "w"; sp.dataset.i = WORDS.indexOf(o); sp.textContent = o.w.replace(/[,]$/, ""); capx.appendChild(sp); });
+      }
+      [...capx.children].forEach(sp => { const i = +sp.dataset.i; sp.classList.toggle("in", i <= wi); sp.classList.toggle("on", i === wi && cp <= WORDS[i].b + .15); });
     }
     prog.style.width = (((bt % (BEAT * LOOP)) + BEAT * LOOP) % (BEAT * LOOP)) / (BEAT * LOOP) * 100 + "%";
     punch *= Math.exp(-dt * 7);
@@ -1178,8 +1199,8 @@ const ICONS = {
       const z = 1 + punch, dx = Math.sin(t * .6) * W * .006, dy = Math.cos(t * .8) * H * .004;
       ctx.translate(W / 2, H * .5); ctx.scale(z, z); ctx.translate(-W / 2 + dx, -H * .5 + dy);
       let talk;
-      if (actx && soundOn) { const at = actx.currentTime, s2 = sylls.find(([a, b]) => at >= a && at <= b); talk = s2 ? Math.sin(Math.PI * (at - s2[0]) / (s2[1] - s2[0])) : 0; }
-      else talk = Math.max(0, Math.sin(t * 7.3) * Math.sin(t * 2.1));
+      if (actx && soundOn && voiceAn && voiceBuf) { voiceAn.getFloatTimeDomainData(vbuf); let q = 0; for (const x of vbuf) q += x * x; talk = Math.min(1, Math.sqrt(q / vbuf.length) * 9); }
+      else { const cp = (((actx ? actx.currentTime - offset : t) % TAKE) + TAKE) % TAKE; const on = SPEECH.some(([x, y]) => cp >= x && cp <= y); talk = on ? .35 + .65 * Math.abs(Math.sin(t * 13)) : 0; }
       scene(t, talk);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (state.color) {
