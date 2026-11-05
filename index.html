@@ -211,9 +211,9 @@ h2 { font-family: var(--display); font-weight: 800; font-stretch: 115%; font-siz
   --mx: 50%; --my: 50%;
   position: relative; aspect-ratio: 4 / 5; max-width: 100%; border-radius: 16px; overflow: hidden; cursor: pointer;
   background: var(--surface-2); border: 1px solid var(--line); padding: 0; display: block; width: 100%;
-  transition: transform .18s cubic-bezier(.2,.9,.3,1.2), box-shadow .3s var(--ease), border-color .3s;
+  transition: box-shadow .5s var(--ease), border-color .4s;
 }
-.thumb:hover { transform: translateY(-6px); box-shadow: 0 24px 60px -24px rgba(95,132,160,.55); border-color: rgba(247,231,220,.22); }
+.thumb:hover { box-shadow: 0 24px 60px -24px rgba(95,132,160,.55); border-color: rgba(247,231,220,.22); }
 .thumb::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s;
   background: radial-gradient(260px circle at var(--mx) var(--my), rgba(255,248,243,.16), transparent 60%); }
 .thumb:hover::after { opacity: 1; }
@@ -716,17 +716,24 @@ function renderTabs() {
   requestAnimationFrame(movePill);
 }
 function spotlight(el, tilt) {
+  /* tilt: the card eases toward the mouse and floats back to flat, animated frame by frame so it never jumps */
+  let cx = 0, cy = 0, lift = 0, tx = 0, ty = 0, tl = 0, raf = 0;
+  const step = () => {
+    cx += (tx - cx) * .1; cy += (ty - cy) * .1; lift += (tl - lift) * .1;
+    const done = Math.abs(tx - cx) < .02 && Math.abs(ty - cy) < .02 && Math.abs(tl - lift) < .002;
+    if (done && tl === 0) { el.style.transform = ""; raf = 0; return; }
+    el.style.transform = "perspective(900px) rotateX(" + cx.toFixed(2) + "deg) rotateY(" + cy.toFixed(2) + "deg) translateY(" + (-8 * lift).toFixed(2) + "px) scale(" + (1 + .03 * lift).toFixed(4) + ")";
+    raf = done ? 0 : requestAnimationFrame(step);
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(step); };
   el.addEventListener("pointermove", e => {
     const r = el.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
     el.style.setProperty("--mx", x + "px");
     el.style.setProperty("--my", y + "px");
-    if (tilt && !reduce && e.pointerType === "mouse") {
-      const rx = ((y / r.height) - .5) * -32, ry = ((x / r.width) - .5) * 38;
-      el.style.transform = "perspective(520px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translateY(-10px) scale(1.05)";
-    }
+    if (tilt && !reduce && e.pointerType === "mouse") { tx = ((y / r.height) - .5) * -14; ty = ((x / r.width) - .5) * 16; tl = 1; kick(); }
   });
-  if (tilt) el.addEventListener("pointerleave", () => { el.style.transform = ""; });
+  if (tilt) el.addEventListener("pointerleave", () => { tx = 0; ty = 0; tl = 0; kick(); });
 }
 function renderGrid() {
   const sec = SECTIONS.find(s => s.folder === current);
