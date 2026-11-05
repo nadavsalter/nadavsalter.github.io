@@ -645,10 +645,16 @@ async function load(sec) {
   try {
     const r = await fetch("https://api.github.com/repos/" + OWNER + "/" + REPO + "/contents/work/" + sec.folder);
     if (!r.ok) return [];
-    const list = await r.json();
-    return list.filter(f => f.type === "file" && (VIDEO.test(f.name) || IMAGE.test(f.name)))
+    const list = (await r.json()).filter(f => f.type === "file");
+    const base = n => n.replace(/\.[^.]+$/, "");
+    const url = n => "work/" + sec.folder + "/" + encodeURIComponent(n);
+    const vids = list.filter(f => VIDEO.test(f.name));
+    const vidBases = new Set(vids.map(f => base(f.name)));
+    /* an image with the same name as a video (e.g. 01-ad.jpg next to 01-ad.mp4) becomes that video's cover */
+    const covers = {}; list.filter(f => IMAGE.test(f.name) && vidBases.has(base(f.name))).forEach(f => covers[base(f.name)] = url(f.name));
+    return list.filter(f => VIDEO.test(f.name) || (IMAGE.test(f.name) && !vidBases.has(base(f.name))))
       .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-      .map(f => ({ src: "work/" + sec.folder + "/" + encodeURIComponent(f.name), title: titleFrom(f.name), video: VIDEO.test(f.name), section: sec.name }));
+      .map(f => ({ src: url(f.name), title: titleFrom(f.name), video: VIDEO.test(f.name), poster: covers[base(f.name)], section: sec.name }));
   } catch (e) { return []; }
 }
 function movePill() {
@@ -702,7 +708,7 @@ function renderGrid() {
     spotlight(btn, true);
     if (it.video) {
       const v = document.createElement("video");
-      v.src = it.src + "#t=0.5"; v.muted = true; v.playsInline = true; v.preload = "metadata"; v.loop = true;
+      v.src = it.src + "#t=0.5"; if (it.poster) v.poster = it.poster; v.muted = true; v.playsInline = true; v.preload = "metadata"; v.loop = true;
       btn.appendChild(v);
       btn.addEventListener("mouseenter", () => v.play().catch(() => {}));
       btn.addEventListener("mouseleave", () => v.pause());
@@ -721,7 +727,7 @@ function openItem(it) {
   media.innerHTML = "";
   const el = document.createElement(it.video ? "video" : "img");
   el.src = it.src;
-  if (it.video) { el.controls = true; el.autoplay = true; el.playsInline = true; } else { el.alt = it.title; }
+  if (it.video) { el.controls = true; el.autoplay = true; el.playsInline = true; if (it.poster) el.poster = it.poster; } else { el.alt = it.title; }
   media.appendChild(el);
   document.getElementById("capTitle").textContent = it.title;
   dlg.showModal();
