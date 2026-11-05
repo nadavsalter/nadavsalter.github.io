@@ -708,7 +708,7 @@ function renderGrid() {
     spotlight(btn, true);
     if (it.video) {
       const v = document.createElement("video");
-      v.src = it.src + "#t=0.5"; if (it.poster) v.poster = it.poster; v.muted = true; v.playsInline = true; v.preload = "metadata"; v.loop = true;
+      v.src = it.src + "#t=0.5"; if (it.poster) v.poster = it.poster; v.muted = true; v.setAttribute("controlslist", "nodownload"); v.addEventListener("contextmenu", e => e.preventDefault()); v.playsInline = true; v.preload = "metadata"; v.loop = true;
       btn.appendChild(v);
       btn.addEventListener("mouseenter", () => v.play().catch(() => {}));
       btn.addEventListener("mouseleave", () => v.pause());
@@ -727,7 +727,7 @@ function openItem(it) {
   media.innerHTML = "";
   const el = document.createElement(it.video ? "video" : "img");
   el.src = it.src;
-  if (it.video) { el.controls = true; el.autoplay = true; el.playsInline = true; if (it.poster) el.poster = it.poster; } else { el.alt = it.title; }
+  if (it.video) { el.controls = true; el.autoplay = true; el.playsInline = true; el.setAttribute("controlslist", "nodownload"); el.addEventListener("contextmenu", e => e.preventDefault()); if (it.poster) el.poster = it.poster; } else { el.alt = it.title; }
   media.appendChild(el);
   document.getElementById("capTitle").textContent = it.title;
   dlg.showModal();
