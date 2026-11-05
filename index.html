@@ -648,7 +648,6 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); 
   <footer><span>© 2026 Nadav Salter</span><span>END OF SEQUENCE · 00:00:45:00</span></footer>
 </div>
 
-<div class="ring" id="ring" aria-hidden="true"></div>
 <div class="scrolltc" id="scrolltc" aria-hidden="true"><span class="bar3"><i id="stcBar"></i></span><span id="stc">00:00:00:00</span></div>
 
 <dialog id="player" aria-label="Video player">
@@ -1232,23 +1231,6 @@ const ICONS = {
       c.classList.toggle("hot", k > .55);
     });
   }
-})();
-
-/* ===== Cursor ring ===== */
-(function () {
-  if (reduce || !matchMedia("(pointer: fine)").matches) return;
-  const ring = document.getElementById("ring");
-  let x = -100, y = -100, rx = -100, ry = -100;
-  addEventListener("pointermove", e => {
-    x = e.clientX; y = e.clientY; ring.classList.add("on");
-    const t = e.target.closest("[data-cursor], a, button, .timeline");
-    const label = t && t.dataset.cursor;
-    ring.classList.toggle("big", !!label);
-    ring.classList.toggle("link", !!t && !label);
-    ring.textContent = label || "";
-  });
-  document.addEventListener("pointerleave", () => ring.classList.remove("on"));
-  (function loop() { rx += (x - rx) * .2; ry += (y - ry) * .2; ring.style.transform = "translate(" + rx + "px," + ry + "px)"; requestAnimationFrame(loop); })();
 })();
 
 /* ===== Scroll timecode ===== */
