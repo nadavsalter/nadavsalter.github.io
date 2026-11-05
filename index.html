@@ -936,12 +936,14 @@ const ICONS = {
       master = actx.createGain(); master.gain.value = 0;
       master.connect(comp); comp.connect(actx.destination);
       ["music", "sfx", "ui"].forEach(k => { bus[k] = actx.createGain(); bus[k].gain.value = 0; bus[k].connect(master); });
-      /* the raw "talking" track: a muffled made-up voice, always there like the original audio */
-      const hp = actx.createBiquadFilter(), lp = actx.createBiquadFilter(), room = actx.createDelay(), roomG = actx.createGain();
-      hp.type = "highpass"; hp.frequency.value = 140; lp.type = "lowpass"; lp.frequency.value = 1900; lp.Q.value = .4;
-      room.delayTime.value = .045; roomG.gain.value = .18;
-      bus.voiceIn = actx.createGain(); bus.voice = actx.createGain(); bus.voice.gain.value = .85;
-      bus.voiceIn.connect(hp); hp.connect(lp); lp.connect(bus.voice); lp.connect(room); room.connect(roomG); roomG.connect(bus.voice); bus.voice.connect(master);
+      /* the raw "talking" track: a muffled, made-up voice in a room, always there like the original audio */
+      const hp = actx.createBiquadFilter(), lp = actx.createBiquadFilter(), lp2 = actx.createBiquadFilter(), dry = actx.createGain(), wet = actx.createGain(), verb = actx.createConvolver();
+      hp.type = "highpass"; hp.frequency.value = 110; lp.type = "lowpass"; lp.frequency.value = 1150; lp.Q.value = .2; lp2.type = "lowpass"; lp2.frequency.value = 1600; lp2.Q.value = .2;
+      const ir = actx.createBuffer(2, Math.floor(actx.sampleRate * 1.3), actx.sampleRate);
+      for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3.2); }
+      verb.buffer = ir; dry.gain.value = .75; wet.gain.value = .32;
+      bus.voiceIn = actx.createGain(); bus.voice = actx.createGain(); bus.voice.gain.value = .5;
+      bus.voiceIn.connect(hp); hp.connect(lp); lp.connect(lp2); lp2.connect(dry); lp2.connect(verb); verb.connect(wet); dry.connect(bus.voice); wet.connect(bus.voice); bus.voice.connect(master);
       vNext = actx.currentTime + .25;
       noise = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
       const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -984,26 +986,44 @@ const ICONS = {
   const whoosh = t => burst(t, .5, .4, "bandpass", 300, 1.4, bus.sfx, 5000);
   const boom = t => { osc("sine", 95, t, 1.1, .8, bus.sfx, .004, 32); burst(t, .25, .3, "lowpass", 500, .7, bus.sfx); };
   const tick = t => osc("sine", 1800, t, .04, .05, bus.ui, .002);
-  /* made-up speech: a buzzy voice source shaped by vowel formants, syllable by syllable */
-  const VOWELS = [[730, 1090], [270, 2290], [530, 1840], [570, 840], [300, 870], [660, 1720], [490, 1350], [400, 2000]];
-  let vNext = 0, phraseLeft = 0, pitch = 125; const sylls = [];
-  function syllable(t, dur, f0) {
-    const [f1, f2] = VOWELS[Math.floor(Math.random() * VOWELS.length)];
-    const o = actx.createOscillator(), env = actx.createGain(); o.type = "sawtooth";
-    o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * (.9 + Math.random() * .2), t + dur);
-    env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(.32, t + .035); env.gain.setValueAtTime(.32, t + dur * .65); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    [[f1, 7, 1], [f2, 9, .55], [2600, 10, .25]].forEach(([f, q, g]) => { const bp = actx.createBiquadFilter(), gg = actx.createGain(); bp.type = "bandpass"; bp.frequency.value = f * (.94 + Math.random() * .12); bp.Q.value = q; gg.gain.value = g * 2.4; o.connect(bp); bp.connect(gg); gg.connect(env); });
-    env.connect(bus.voiceIn); o.start(t); o.stop(t + dur + .05);
-    if (Math.random() < .6) burst(t, .03, .12, "bandpass", 2600 + Math.random() * 2000, 1.2, bus.voiceIn);
-    sylls.push([t, t + dur]); while (sylls.length > 40) sylls.shift();
+  /* made-up speech: one continuous voice per sentence. The pitch rises and falls like a real sentence,
+     the vowel shapes glide into each other and the loudness swells syllable by syllable. */
+  const VOWELS = [[730, 1090, 2440], [270, 2290, 3010], [530, 1840, 2480], [570, 840, 2410], [300, 870, 2240], [660, 1720, 2410], [490, 1350, 1690], [400, 2000, 2550], [440, 1020, 2240]];
+  let vNext = 0; const sylls = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function phrase(t0) {
+    const n = 4 + Math.floor(Math.random() * 11), base = rnd(102, 128);
+    const durs = Array.from({ length: n }, () => rnd(.12, .24));
+    const total = durs.reduce((a, b) => a + b, 0) + .25;
+    const src = actx.createOscillator(); src.type = "sawtooth";
+    const soft = actx.createBiquadFilter(); soft.type = "lowpass"; soft.frequency.value = 2200; soft.Q.value = .3;
+    const vib = actx.createOscillator(), vibG = actx.createGain(); vib.frequency.value = rnd(4.6, 5.8); vibG.gain.value = 1.6; vib.connect(vibG); vibG.connect(src.frequency);
+    const breath = actx.createBufferSource(), bF = actx.createBiquadFilter(), bG = actx.createGain(); breath.buffer = noise; breath.loop = true; bF.type = "bandpass"; bF.frequency.value = 1500; bF.Q.value = .6; bG.gain.value = .05;
+    const amp = actx.createGain(); amp.gain.setValueAtTime(0.0001, t0);
+    const forms = [[5, 1], [7, .5], [9, .18]].map(([q, g]) => { const f = actx.createBiquadFilter(), gg = actx.createGain(); f.type = "bandpass"; f.Q.value = q; gg.gain.value = g * 3.2; soft.connect(f); f.connect(gg); gg.connect(amp); return f; });
+    src.connect(soft); breath.connect(bF); bF.connect(bG); bG.connect(amp); amp.connect(bus.voiceIn);
+    src.frequency.setValueAtTime(base * 1.04, t0);
+    let t = t0 + .02;
+    durs.forEach((d, i) => {
+      const prog = i / Math.max(1, n - 1), v = VOWELS[Math.floor(Math.random() * VOWELS.length)];
+      /* sentence melody: lift early, drift down at the end, a small random accent on some syllables */
+      const f0 = base * (1 + .1 * Math.sin(Math.PI * Math.min(1, prog * 1.3)) - .08 * prog + (Math.random() < .25 ? .07 : 0) + rnd(-.02, .02));
+      src.frequency.setTargetAtTime(f0, t, .045);
+      forms.forEach((f, k) => f.frequency.setTargetAtTime(v[k] * rnd(.95, 1.05), t, .03));
+      const peak = rnd(.55, 1) * (i === 0 ? .8 : 1);
+      amp.gain.setTargetAtTime(peak, t, .022);
+      const gap = Math.random() < .35 ? .04 : .3;
+      amp.gain.setTargetAtTime(peak * gap, t + d * .72, .03);
+      sylls.push([t, t + d * .85]);
+      t += d;
+    });
+    amp.gain.setTargetAtTime(0.0001, t, .05);
+    while (sylls.length > 60) sylls.shift();
+    [src, vib, breath].forEach(x => { x.start(t0); x.stop(t0 + total + .3); });
+    return t0 + total;
   }
   function voiceTick() {
-    while (vNext < actx.currentTime + .3) {
-      if (phraseLeft <= 0) { phraseLeft = 5 + Math.floor(Math.random() * 10); pitch = 118 + Math.random() * 24; vNext += .25 + Math.random() * .45; continue; }
-      const dur = .11 + Math.random() * .13;
-      syllable(vNext, dur, pitch * (1 + (Math.random() - .4) * .18)); pitch *= .985;
-      vNext += dur + .015 + Math.random() * .05; phraseLeft--;
-    }
+    while (vNext < actx.currentTime + .3) vNext = phrase(Math.max(vNext, actx.currentTime + .05)) + rnd(.18, .55);
   }
   function schedule() {
     voiceTick();
