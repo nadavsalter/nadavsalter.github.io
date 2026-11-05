@@ -350,12 +350,15 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); 
 .r-music { display: flex; gap: 6px; align-items: center; font: 500 11.5px var(--body); opacity: .9; white-space: nowrap; overflow: hidden; }
 .r-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.25); }
 .r-prog i { display: block; height: 100%; width: 0; background: #fff; }
-.capx { position: absolute; z-index: 3; left: 8%; right: 8%; top: 63%; text-align: center; pointer-events: none;
-  font-family: var(--display); font-weight: 900; font-stretch: 100%; font-size: clamp(24px, 7.4vw, 31px); line-height: 1.02; letter-spacing: -.01em;
-  color: #fff; text-transform: uppercase; paint-order: stroke fill; -webkit-text-stroke: 5px #000; }
-.capx span { display: inline-block; margin: 0 .14em; animation: wpop .28s cubic-bezier(.3,1.6,.5,1); }
-.capx span.k { color: #ffd84d; }
-@keyframes wpop { from { transform: scale(.5) translateY(6px); opacity: 0; } }
+.capx { position: absolute; z-index: 3; left: 7%; right: 7%; top: 64%; text-align: center; pointer-events: none;
+  font-family: var(--display); font-weight: 800; font-stretch: 100%; font-size: clamp(19px, 5.6vw, 23px); line-height: 1.35; letter-spacing: -.01em;
+  color: #fff; text-shadow: 0 2px 14px rgba(0,0,0,.65), 0 1px 2px rgba(0,0,0,.5); transition: opacity .3s; }
+.capx .w { display: inline-block; padding: .04em .3em .08em; margin: .06em .02em; border-radius: .38em;
+  opacity: 0; transform: translateY(7px) scale(.96); filter: blur(5px);
+  transition: opacity .28s var(--ease), transform .35s var(--ease), filter .28s var(--ease), background-color .2s, color .2s, box-shadow .2s; }
+.capx .w.in { opacity: 1; transform: none; filter: none; }
+.capx .w.k { color: #a9cbe4; }
+.capx .w.on { background-color: var(--blush); color: #0b0d10; text-shadow: none; transform: scale(1.07); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
 .flashx { position: absolute; z-index: 2; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
 .flashx.go { animation: flash .35s ease-out; }
 @keyframes flash { from { opacity: .7; } to { opacity: 0; } }
@@ -891,7 +894,8 @@ const ICONS = {
   const fxBtns = [...document.querySelectorAll(".fx")], compare = document.getElementById("compare"), knob = document.getElementById("knob");
   const state = { captions: false, music: false, effects: false, color: false };
   const BPM = 96, BEAT = 60 / BPM, LOOP = 16;
-  const LINES = [["NOBODY", "TALKS"], ["ABOUT", "THIS"], ["BUT", "IT", "CHANGES"], ["*EVERYTHING*"], ["WATCH", "WHAT"], ["HAPPENS", "*NEXT*"], ["STAY", "TILL"], ["THE", "*END*"]];
+  const LINES = [["Nobody", "talks", "about", "this"], ["but", "it", "changes", "*everything*"], ["the", "first", "second", "*matters*"], ["so", "hook", "them", "*fast*"],
+    ["then", "keep", "the", "*pace*"], ["cut", "every", "dead", "*second*"], ["and", "they", "watch", "*longer*"], ["till", "the", "very", "*end*"]];
   const CHORDS = [[110, [220, 261.63, 329.63]], [87.31, [174.61, 220, 261.63]], [130.81, [261.63, 329.63, 392]], [98, [196, 246.94, 293.66]]];
   const perf = () => performance.now() / 1000;
   let likes = 1204, punch = 0, lastHalf = -1, shownLine = -1, shownWords = 0, visible = true;
@@ -911,7 +915,7 @@ const ICONS = {
     if (!state.captions) { capx.innerHTML = ""; shownLine = -1; shownWords = 0; }
     if (bus.music) {
       const t = actx.currentTime;
-      bus.music.gain.setTargetAtTime(state.music ? .9 : 0, t, .04);
+      bus.music.gain.setTargetAtTime(state.music ? .5 : 0, t, .04);
       bus.sfx.gain.setTargetAtTime(state.effects ? 1 : 0, t, .04);
       bus.ui.gain.setTargetAtTime(state.captions ? 1 : 0, t, .04);
     }
@@ -932,6 +936,13 @@ const ICONS = {
       master = actx.createGain(); master.gain.value = 0;
       master.connect(comp); comp.connect(actx.destination);
       ["music", "sfx", "ui"].forEach(k => { bus[k] = actx.createGain(); bus[k].gain.value = 0; bus[k].connect(master); });
+      /* the raw "talking" track: a muffled made-up voice, always there like the original audio */
+      const hp = actx.createBiquadFilter(), lp = actx.createBiquadFilter(), room = actx.createDelay(), roomG = actx.createGain();
+      hp.type = "highpass"; hp.frequency.value = 140; lp.type = "lowpass"; lp.frequency.value = 1900; lp.Q.value = .4;
+      room.delayTime.value = .045; roomG.gain.value = .18;
+      bus.voiceIn = actx.createGain(); bus.voice = actx.createGain(); bus.voice.gain.value = .85;
+      bus.voiceIn.connect(hp); hp.connect(lp); lp.connect(bus.voice); lp.connect(room); room.connect(roomG); roomG.connect(bus.voice); bus.voice.connect(master);
+      vNext = actx.currentTime + .25;
       noise = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
       const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       offset = actx.currentTime - perf();
@@ -972,8 +983,30 @@ const ICONS = {
   }
   const whoosh = t => burst(t, .5, .4, "bandpass", 300, 1.4, bus.sfx, 5000);
   const boom = t => { osc("sine", 95, t, 1.1, .8, bus.sfx, .004, 32); burst(t, .25, .3, "lowpass", 500, .7, bus.sfx); };
-  const tick = t => osc("sine", 1500, t, .05, .12, bus.ui, .002);
+  const tick = t => osc("sine", 1800, t, .04, .05, bus.ui, .002);
+  /* made-up speech: a buzzy voice source shaped by vowel formants, syllable by syllable */
+  const VOWELS = [[730, 1090], [270, 2290], [530, 1840], [570, 840], [300, 870], [660, 1720], [490, 1350], [400, 2000]];
+  let vNext = 0, phraseLeft = 0, pitch = 125; const sylls = [];
+  function syllable(t, dur, f0) {
+    const [f1, f2] = VOWELS[Math.floor(Math.random() * VOWELS.length)];
+    const o = actx.createOscillator(), env = actx.createGain(); o.type = "sawtooth";
+    o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * (.9 + Math.random() * .2), t + dur);
+    env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(.32, t + .035); env.gain.setValueAtTime(.32, t + dur * .65); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    [[f1, 7, 1], [f2, 9, .55], [2600, 10, .25]].forEach(([f, q, g]) => { const bp = actx.createBiquadFilter(), gg = actx.createGain(); bp.type = "bandpass"; bp.frequency.value = f * (.94 + Math.random() * .12); bp.Q.value = q; gg.gain.value = g * 2.4; o.connect(bp); bp.connect(gg); gg.connect(env); });
+    env.connect(bus.voiceIn); o.start(t); o.stop(t + dur + .05);
+    if (Math.random() < .6) burst(t, .03, .12, "bandpass", 2600 + Math.random() * 2000, 1.2, bus.voiceIn);
+    sylls.push([t, t + dur]); while (sylls.length > 40) sylls.shift();
+  }
+  function voiceTick() {
+    while (vNext < actx.currentTime + .3) {
+      if (phraseLeft <= 0) { phraseLeft = 5 + Math.floor(Math.random() * 10); pitch = 118 + Math.random() * 24; vNext += .25 + Math.random() * .45; continue; }
+      const dur = .11 + Math.random() * .13;
+      syllable(vNext, dur, pitch * (1 + (Math.random() - .4) * .18)); pitch *= .985;
+      vNext += dur + .015 + Math.random() * .05; phraseLeft--;
+    }
+  }
   function schedule() {
+    voiceTick();
     while ((nextBeat * BEAT + offset) < actx.currentTime + .15) {
       const t = nextBeat * BEAT + offset, lb = ((nextBeat % LOOP) + LOOP) % LOOP, bar = Math.floor(lb / 4), bib = lb % 4;
       const [root, chord] = CHORDS[bar];
@@ -989,7 +1022,7 @@ const ICONS = {
       nextBeat++;
     }
   }
-  soundBtn.addEventListener("click", () => { startAudio(); soundBtn.classList.add("hide"); if (!Object.values(state).some(Boolean)) setAll(true, true); });
+  soundBtn.addEventListener("click", () => { startAudio(); soundBtn.classList.add("hide"); });
   muteBtn.addEventListener("click", () => {
     if (!actx || !soundOn) { startAudio(); soundBtn.classList.add("hide"); }
     else { soundOn = false; setMasterGain(); }
@@ -1003,7 +1036,7 @@ const ICONS = {
   function size() { dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.round(cv.clientWidth * dpr); H = cv.height = Math.round(cv.clientHeight * dpr); }
   size(); if ("ResizeObserver" in window) new ResizeObserver(size).observe(cv);
   const bokeh = Array.from({ length: 9 }, (_, i) => ({ x: Math.random(), y: Math.random() * .55, r: .04 + Math.random() * .07, s: .2 + Math.random() * .6, warm: i % 3 !== 0 }));
-  function scene(t) {
+  function scene(t, talkIn) {
     const u = W / 100;
     const sky = ctx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#1d2833"); sky.addColorStop(1, "#090c10");
     ctx.fillStyle = sky; ctx.fillRect(-W, -H, W * 3, H * 3);
@@ -1019,7 +1052,7 @@ const ICONS = {
     });
     const lamp = ctx.createRadialGradient(10 * u, H * .3, 0, 10 * u, H * .3, 45 * u); lamp.addColorStop(0, "rgba(255,170,110,.35)"); lamp.addColorStop(1, "rgba(255,170,110,0)");
     ctx.fillStyle = lamp; ctx.fillRect(-W, -H, W * 3, H * 3);
-    const talk = Math.max(0, Math.sin(t * 7.3) * Math.sin(t * 2.1));
+    const talk = talkIn;
     const hx = 50 * u + Math.sin(t * .7) * 1.2 * u, hy = H * .5 + Math.sin(t * 1.3) * .5 * u - talk * .8 * u;
     const body = ctx.createLinearGradient(0, H * .62, 0, H); body.addColorStop(0, "#232b33"); body.addColorStop(1, "#0f1317");
     ctx.fillStyle = body; ctx.beginPath();
@@ -1065,11 +1098,11 @@ const ICONS = {
       }
       if (state.captions) {
         const li = Math.floor(hh / 4), wi = hh % 4, line = LINES[li];
-        if (li !== shownLine) { capx.innerHTML = ""; shownLine = li; shownWords = 0; }
-        if (wi < line.length && shownWords <= wi) {
-          const w = line[wi], sp = document.createElement("span"); sp.textContent = w.replace(/\*/g, "") + " ";
-          if (w.startsWith("*")) sp.className = "k"; capx.appendChild(sp); shownWords = wi + 1;
+        if (li !== shownLine) {
+          capx.innerHTML = ""; shownLine = li;
+          line.forEach(w => { const sp = document.createElement("span"); sp.className = "w" + (w.startsWith("*") ? " k" : ""); sp.textContent = w.replace(/\*/g, ""); capx.appendChild(sp); });
         }
+        [...capx.children].forEach((sp, i) => { sp.classList.toggle("in", i <= wi); sp.classList.toggle("on", i === wi); });
       }
       if (hh % 2 === 0 && Object.values(state).filter(Boolean).length >= 2) {
         likes += 3 + Math.floor(Math.random() * 9); likesEl.textContent = likes.toLocaleString("en-US");
@@ -1082,7 +1115,10 @@ const ICONS = {
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
       const z = 1 + punch, dx = Math.sin(t * .6) * W * .006, dy = Math.cos(t * .8) * H * .004;
       ctx.translate(W / 2, H * .5); ctx.scale(z, z); ctx.translate(-W / 2 + dx, -H * .5 + dy);
-      scene(t);
+      let talk;
+      if (actx && soundOn) { const at = actx.currentTime, s2 = sylls.find(([a, b]) => at >= a && at <= b); talk = s2 ? Math.sin(Math.PI * (at - s2[0]) / (s2[1] - s2[0])) : 0; }
+      else talk = Math.max(0, Math.sin(t * 7.3) * Math.sin(t * 2.1));
+      scene(t, talk);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (state.color) {
         const v = ctx.createRadialGradient(W / 2, H * .5, H * .2, W / 2, H * .5, H * .75); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.55)");
