@@ -942,17 +942,16 @@ const ICONS = {
   const state = { captions: false, music: false, effects: false, color: false };
   const BPM = 96, BEAT = 60 / BPM, LOOP = 16;
   /* what he says, and where his speech sits inside each 5-second take (measured from the audio) */
-  const SCRIPT = "";
+  /* what he says, with each word's start and end time (seconds) inside the 5-second take, taken from the audio */
   const SPEECH = [[0.14, 1.94], [2.42, 2.52], [2.7, 2.96], [3.08, 3.36], [3.52, 4.56]], TAKE = BEAT * 8;
-  const WORDS = (() => {
-    const raw = SCRIPT.trim().split(/\s+/).filter(Boolean); if (!raw.length) return [];
-    const weight = raw.map(w => w.replace(/[^\w']/g, "").length + 2), tot = weight.reduce((a, b) => a + b, 0);
-    const speak = SPEECH.reduce((a, [x, y]) => a + (y - x), 0);
-    const at = p => { let left = p * speak; for (const [x, y] of SPEECH) { if (left <= y - x) return x + left; left -= y - x; } return SPEECH[SPEECH.length - 1][1]; };
-    let acc = 0; const out = raw.map((w, i) => { const a = at(acc / tot); acc += weight[i]; return { w, a, b: at(acc / tot) }; });
-    let line = 0, n = 0; out.forEach((o, i) => { o.line = line; n++; if (n >= 3 || /[.?!,]$/.test(o.w)) { line++; n = 0; } });
-    return out;
-  })();
+  const WORDS = [
+    ["Did", 0, .18, 0], ["you", .18, .28, 0], ["know", .28, .42, 0],
+    ["you", .42, .54, 1], ["lose", .54, .68, 1], ["focus", .68, 1.06, 1],
+    ["every", 1.06, 1.34, 2], ["*8", 1.34, 1.52, 2], ["*seconds?", 1.52, 1.84, 2],
+    ["Drift", 2.32, 2.48, 3], ["Focus", 2.48, 2.88, 3], ["Gummies", 2.88, 3.28, 3],
+    ["keep", 3.28, 3.56, 4], ["you", 3.56, 3.72, 4], ["locked", 3.72, 3.92, 4], ["in", 3.92, 4.14, 4],
+    ["*all", 4.14, 4.28, 5], ["*day.", 4.28, 4.46, 5]
+  ].map(([w, a, b, line]) => ({ w: w.replace("*", ""), k: w.startsWith("*"), a, b, line }));
   const LINES = [["Nobody", "talks", "about", "this"], ["but", "it", "changes", "*everything*"], ["the", "first", "second", "*matters*"], ["so", "hook", "them", "*fast*"],
     ["then", "keep", "the", "*pace*"], ["cut", "every", "dead", "*second*"], ["and", "they", "watch", "*longer*"], ["till", "the", "very", "*end*"]];
   const CHORDS = [[110, [220, 261.63, 329.63]], [87.31, [174.61, 220, 261.63]], [130.81, [261.63, 329.63, 392]], [98, [196, 246.94, 293.66]]];
@@ -1194,7 +1193,7 @@ const ICONS = {
       const li = cur ? cur.line : -1;
       if (li !== shownLine) {
         capx.innerHTML = ""; shownLine = li;
-        WORDS.filter(o => o.line === li).forEach(o => { const sp = document.createElement("span"); sp.className = "w"; sp.dataset.i = WORDS.indexOf(o); sp.textContent = o.w.replace(/[,]$/, ""); capx.appendChild(sp); });
+        WORDS.filter(o => o.line === li).forEach(o => { const sp = document.createElement("span"); sp.className = "w" + (o.k ? " k" : ""); sp.dataset.i = WORDS.indexOf(o); sp.textContent = o.w; capx.appendChild(sp); });
       }
       [...capx.children].forEach(sp => { const i = +sp.dataset.i; sp.classList.toggle("in", i <= wi); sp.classList.toggle("on", i === wi && cp <= WORDS[i].b + .15); });
     }
