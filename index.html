@@ -306,12 +306,22 @@ section { position: relative; }
 .contact > p { color: var(--mist); margin: 26px auto 0; max-width: 46ch; }
 .reply { display: inline-flex; align-items: center; gap: 10px; margin: 22px auto 0; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); font: 600 14px var(--body); background: rgba(0,0,0,.25); backdrop-filter: blur(8px); }
 .reply i { width: 8px; height: 8px; border-radius: 50%; background: #2fae63; animation: pulse 2s infinite; }
-.reach { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 40px auto 0; max-width: 1000px; text-align: left; }
+.reach { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 40px auto 0; width: 100%; max-width: 1000px; text-align: left; }
 .reach > * { border-radius: 22px; border: 1px solid var(--line); padding: 20px 22px; background: rgba(8,9,11,.5); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); text-decoration: none; min-width: 0; transition: transform .4s var(--ease), border-color .3s; }
 .reach > *:hover { transform: translateY(-4px); border-color: rgba(247,231,220,.3); }
 .reach small { display: block; font: 500 11px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--mist); }
 .reach .v { display: block; margin-top: 6px; font: 700 17px var(--display); overflow-wrap: anywhere; }
 .reach .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.mailrow { min-height: 44px; }
+.mailcard { position: relative; }
+.mailwrap { position: relative; display: inline-block; flex-shrink: 0; }
+.mailbtn { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; border-radius: 14px; cursor: pointer; border: 1px solid rgba(247,231,220,.25);
+  background: linear-gradient(135deg, rgba(247,231,220,.16), rgba(95,132,160,.18)); color: var(--cream); font: 600 14px var(--body); transition: transform .35s var(--ease), border-color .3s; }
+.mailbtn:hover { transform: translateY(-2px) scale(1.03); border-color: var(--blush); }
+.mailbtn svg { width: 24px; height: 24px; fill: none; stroke: var(--blush); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.shard { position: absolute; inset: 0; pointer-events: none; margin: 0; }
+#em .ch { display: inline-block; opacity: 0; transform: translateY(8px); filter: blur(4px); animation: chIn .5s var(--ease) forwards; }
+@keyframes chIn { to { opacity: 1; transform: none; filter: none; } }
 .copy { border: 1px solid var(--line); background: transparent; color: var(--cream); border-radius: 999px; padding: 6px 12px; font: 600 12px var(--body); cursor: pointer; flex-shrink: 0; }
 .copy:hover { background: var(--blush); color: var(--black); }
 footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 28px var(--pad) calc(28px + env(safe-area-inset-bottom, 0px)); font: 500 11px var(--mono); letter-spacing: .15em; text-transform: uppercase; color: var(--mist); border-top: 1px solid var(--line); }
@@ -515,7 +525,13 @@ addEventListener("pageshow", () => scrollTo(0, 0));</script>
     <div class="reach rv">
       <a href="https://www.instagram.com/nadav.salterrr/" target="_blank" rel="noopener"><small>Instagram</small><span class="v">@nadav.salterrr ↗</span></a>
       <div><small>Discord</small><div class="row"><span class="v" id="dc">cylus_345</span><button class="copy" type="button" data-copy="dc">Copy</button></div></div>
-      <div><small>Email</small><div class="row"><span class="v" id="em">nadavsalter@gmail.com</span><button class="copy" type="button" data-copy="em">Copy</button></div></div>
+      <div class="mailcard"><small>Email</small>
+        <div class="row mailrow">
+          <span class="v" id="em" aria-live="polite"></span>
+          <span class="mailwrap"><button class="mailbtn" type="button" id="mailBtn" aria-label="Show my email address"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span>Tap to reveal</span></button></span>
+          <button class="copy" type="button" data-copy="em" id="emCopy" hidden>Copy</button>
+        </div>
+      </div>
     </div>
   </section>
 </main>
@@ -838,6 +854,41 @@ if (fine && !reduce) {
   document.addEventListener("pointerleave", () => dot.classList.remove("on"));
   (function loop() { dx += (tx - dx) * .25; dy += (ty - dy) * .25; dot.style.transform = "translate(" + dx + "px," + dy + "px)"; requestAnimationFrame(loop); })();
 }
+
+/* ===== Email: tap the envelope, it breaks apart, the address types in. Never written in the page as plain text. ===== */
+(function () {
+  const btn = document.getElementById("mailBtn"), wrap = btn.parentElement, out = document.getElementById("em"), copy = document.getElementById("emCopy");
+  const addr = () => ["moc.liamg", "retlasvadan"].map(s => [...s].reverse().join("")).reverse().join("@");
+  btn.addEventListener("click", () => {
+    const a = addr();
+    const COLS = 4, ROWS = 2, shards = [];
+    if (!reduce) {
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) for (let k = 0; k < 2; k++) {
+        const x0 = c / COLS * 100, x1 = (c + 1) / COLS * 100, y0 = r / ROWS * 100, y1 = (r + 1) / ROWS * 100;
+        const poly = k ? [x0 + "% " + y0 + "%", x1 + "% " + y0 + "%", x1 + "% " + y1 + "%"] : [x0 + "% " + y0 + "%", x1 + "% " + y1 + "%", x0 + "% " + y1 + "%"];
+        const s = btn.cloneNode(true); s.removeAttribute("id"); s.setAttribute("aria-hidden", "true"); s.tabIndex = -1; s.classList.add("shard");
+        s.style.clipPath = "polygon(" + poly.join(",") + ")"; wrap.appendChild(s); shards.push([s, (x0 + x1) / 2 - 50, (y0 + y1) / 2 - 50]);
+      }
+    }
+    btn.style.visibility = "hidden";
+    shards.forEach(([s, dx, dy], i) => {
+      const ang = Math.atan2(dy || .1, dx || .1), dist = 50 + Math.random() * 70;
+      const end = "translate(" + (Math.cos(ang) * dist) + "px," + (Math.sin(ang) * dist + 50) + "px) rotate(" + ((Math.random() - .5) * 240) + "deg) scale(.5)";
+      s.animate([{ transform: "none", opacity: 1, offset: 0 }, { transform: "translate(" + (Math.cos(ang) * 6) + "px," + (Math.sin(ang) * 6) + "px)", opacity: 1, offset: .12 },
+        { opacity: .9, offset: .45 }, { transform: end, opacity: 0, offset: 1 }],
+        { duration: 1100 + Math.random() * 500, delay: i * 25, easing: "cubic-bezier(.3,.6,.3,1)", fill: "forwards" }).finished.then(() => s.remove());
+    });
+    setTimeout(() => {
+      const wr = wrap.getBoundingClientRect(), pr = wrap.offsetParent.getBoundingClientRect();
+      Object.assign(wrap.style, { position: "absolute", left: (wr.left - pr.left) + "px", top: (wr.top - pr.top) + "px", width: wr.width + "px", height: wr.height + "px" });
+      setTimeout(() => wrap.remove(), 2200);
+      out.textContent = "";
+      [...a].forEach((ch, i) => { const sp = document.createElement("span"); sp.className = "ch"; sp.textContent = ch; sp.style.animationDelay = (i * 28) + "ms"; out.appendChild(sp); });
+      out.setAttribute("aria-label", a);
+      copy.hidden = false;
+    }, reduce ? 0 : 450);
+  });
+})();
 
 /* ===== Copy buttons ===== */
 document.querySelectorAll("button.copy").forEach(b => b.addEventListener("click", () => {
